@@ -84,6 +84,14 @@ app.use((req, _unused, next) => {
   next();
 });
 
+app.get("/", (_req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Welcome to the JKVIS Backend 🚀",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Health check endpoint
 app.get("/health", (_unused, res) => {
   logger.info("Health check requested");
