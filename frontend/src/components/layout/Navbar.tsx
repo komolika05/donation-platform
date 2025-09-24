@@ -1,36 +1,50 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useAuth } from "@/contexts/AuthContext"
-import { cn } from "@/lib/utils"
-import { Menu, X, Heart, User, LogOut, Settings, BarChart3 } from "lucide-react"
-import Button from "@/components/ui/Button"
+import { useState } from "react";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+import {
+  Menu,
+  X,
+  Heart,
+  User,
+  LogOut,
+  Settings,
+  BarChart3,
+} from "lucide-react";
+import Button from "@/components/ui/Button";
 
 const Navbar = () => {
-  const { user, logout } = useAuth()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { user, logout } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const handleLogout = () => {
-    logout()
-    setIsMenuOpen(false)
-  }
+    logout();
+    setIsMenuOpen(false);
+  };
 
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/about", label: "About" },
     { href: "/donate", label: "Donate" },
-    { href: "/downloads", label: "Resources" },
-  ]
+    { href: "/resources", label: "Resources" },
+  ];
 
   const userMenuItems = [
-    ...(user?.role === "donor" ? [{ href: "/dashboard", label: "Dashboard", icon: BarChart3 }] : []),
-    ...(user?.role === "hospital-admin" ? [{ href: "/hospital-admin", label: "Admin Panel", icon: Settings }] : []),
-    ...(user?.role === "super-admin" ? [{ href: "/admin", label: "Super Admin", icon: Settings }] : []),
+    ...(user?.role === "donor"
+      ? [{ href: "/dashboard", label: "Dashboard", icon: BarChart3 }]
+      : []),
+    ...(user?.role === "hospital-admin"
+      ? [{ href: "/hospital-admin", label: "Admin Panel", icon: Settings }]
+      : []),
+    ...(user?.role === "super-admin"
+      ? [{ href: "/admin", label: "Super Admin", icon: Settings }]
+      : []),
     { href: "/profile", label: "Profile", icon: User },
-  ]
+  ];
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -61,7 +75,9 @@ const Navbar = () => {
               <div className="relative group">
                 <button className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors">
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-blue-600">{user.name.charAt(0).toUpperCase()}</span>
+                    <span className="text-sm font-medium text-blue-600">
+                      {user.name.charAt(0).toUpperCase()}
+                    </span>
                   </div>
                   <span className="font-medium">{user.name}</span>
                 </button>
@@ -107,7 +123,11 @@ const Navbar = () => {
             onClick={toggleMenu}
             className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
           >
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {isMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
           </button>
         </div>
 
@@ -115,7 +135,9 @@ const Navbar = () => {
         <div
           className={cn(
             "md:hidden transition-all duration-300 ease-in-out",
-            isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0 overflow-hidden",
+            isMenuOpen
+              ? "max-h-96 opacity-100"
+              : "max-h-0 opacity-0 overflow-hidden"
           )}
         >
           <div className="py-4 space-y-2">
@@ -134,7 +156,9 @@ const Navbar = () => {
               <>
                 <hr className="my-4" />
                 <div className="px-4 py-2">
-                  <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {user.name}
+                  </p>
                   <p className="text-sm text-gray-500">{user.email}</p>
                 </div>
                 {userMenuItems.map((item) => (
@@ -175,7 +199,7 @@ const Navbar = () => {
         </div>
       </div>
     </nav>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;

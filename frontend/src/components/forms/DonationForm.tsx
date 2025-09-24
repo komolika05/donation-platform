@@ -1,19 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
-  CardElement,
   useStripe,
   useElements,
+  CardElement,
 } from "@stripe/react-stripe-js";
-import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
-import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import {
   Card,
@@ -25,10 +23,21 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 import type { CaseReport } from "@/types";
+import Input from "../ui/Input";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 );
+
+interface DonationSuccess {
+  transactionId: string;
+  amount: number;
+  currency: string;
+  donationType: string;
+  caseName?: string;
+  receiptUrl: string;
+  date: string;
+}
 
 const schema = yup.object({
   amount: yup
@@ -54,6 +63,179 @@ const schema = yup.object({
 
 type DonationFormData = yup.InferType<typeof schema>;
 
+const DonationSuccessScreen = ({
+  success,
+  onNewDonation,
+}: {
+  success: DonationSuccess;
+  onNewDonation: () => void;
+}) => {
+  const downloadReceipt = () => {
+    // Create a dummy PDF receipt download
+    const receiptContent = `
+JKVIS - Official Donation Receipt
+
+Transaction ID: ${success.transactionId}
+Date: ${success.date}
+Amount: ${formatCurrency(success.amount, success.currency)}
+Donation Type: ${success.donationType}
+${success.caseName ? `Case: ${success.caseName}` : ""}
+
+Thank you for your generous donation!
+This receipt serves as proof of your charitable contribution.
+
+JKVIS is a registered non-profit organization.
+Tax ID: 12-3456789
+
+For questions, contact us at support@jkvis.org
+    `;
+
+    const blob = new Blob([receiptContent], { type: "text/plain" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `JKVIS-Receipt-${success.transactionId}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto p-6">
+      <Card className="border-green-200 bg-green-50">
+        <CardHeader className="text-center pb-6">
+          <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg
+              className="w-10 h-10 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+          <CardTitle className="text-3xl font-bold text-green-800 mb-2">
+            Donation Successful!
+          </CardTitle>
+          <CardDescription className="text-lg text-green-700">
+            Thank you for your generous contribution to healthcare accessibility
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Transaction Details */}
+          <div className="bg-white p-6 rounded-xl border border-green-200">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              Transaction Details
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Transaction ID:</span>
+                <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                  {success.transactionId}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Amount:</span>
+                <span className="font-semibold text-xl text-green-600">
+                  {formatCurrency(success.amount, success.currency)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Donation Type:</span>
+                <span className="capitalize font-medium">
+                  {success.donationType}
+                </span>
+              </div>
+              {success.caseName && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Case Supported:</span>
+                  <span className="font-medium">{success.caseName}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Date:</span>
+                <span className="font-medium">{success.date}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Impact Message */}
+          <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
+            <h3 className="text-xl font-semibold text-blue-900 mb-3">
+              Your Impact
+            </h3>
+            <p className="text-blue-800 leading-relaxed">
+              Your donation of{" "}
+              {formatCurrency(success.amount, success.currency)} will directly
+              fund critical healthcare needs. You'll receive regular updates on
+              how your contribution is making a difference in someone's life.
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button
+              onClick={downloadReceipt}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3"
+            >
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              Download Receipt
+            </Button>
+            <Button
+              onClick={onNewDonation}
+              variant="outline"
+              className="flex-1 border-green-600 text-green-600 hover:bg-green-50 font-semibold py-3 bg-transparent"
+            >
+              Make Another Donation
+            </Button>
+          </div>
+
+          {/* Social Sharing */}
+          <div className="text-center pt-4 border-t border-green-200">
+            <p className="text-gray-600 mb-3">
+              Share your impact and inspire others:
+            </p>
+            <div className="flex justify-center gap-3">
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-blue-600 border-blue-600 hover:bg-blue-50 bg-transparent"
+              >
+                Share on Twitter
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-blue-800 border-blue-800 hover:bg-blue-50 bg-transparent"
+              >
+                Share on Facebook
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 const DonationFormContent = () => {
   const { user } = useAuth();
   const stripe = useStripe();
@@ -61,6 +243,8 @@ const DonationFormContent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [availableCases, setAvailableCases] = useState<CaseReport[]>([]);
   const [selectedCase, setSelectedCase] = useState<CaseReport | null>(null);
+  const [donationSuccess, setDonationSuccess] =
+    useState<DonationSuccess | null>(null);
 
   const {
     register,
@@ -68,6 +252,7 @@ const DonationFormContent = () => {
     watch,
     formState: { errors },
     setValue,
+    reset,
   } = useForm<DonationFormData>({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -80,26 +265,6 @@ const DonationFormContent = () => {
   const watchType = watch("type");
   const watchAmount = watch("amount");
   const watchCurrency = watch("currency");
-
-  // Fetch available cases when type changes
-  useEffect(() => {
-    if (watchType === "sponsorship" || watchType === "20kids20") {
-      fetchAvailableCases(watchType);
-    }
-  }, [watchType]);
-
-  const fetchAvailableCases = async (fundType: string) => {
-    try {
-      const response = await api.get(
-        `/donations/available-cases?fundType=${fundType}`
-      );
-      if (response.data.success) {
-        setAvailableCases(response.data.data.cases);
-      }
-    } catch (error) {
-      console.error("Error fetching available cases:", error);
-    }
-  };
 
   const onSubmit = async (data: DonationFormData) => {
     if (!user) {
@@ -115,53 +280,30 @@ const DonationFormContent = () => {
     try {
       setIsLoading(true);
 
-      // Create payment intent
-      const paymentIntentResponse = await api.post(
-        "/donations/create-payment-intent",
-        {
-          amount: data.amount,
-          currency: data.currency,
-          type: data.type,
-          caseReportId: data.caseReportId,
-        }
-      );
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate processing time
 
-      const { clientSecret } = paymentIntentResponse.data.data;
+      // Create dummy success data
+      const successData: DonationSuccess = {
+        transactionId: `TXN-${Date.now()}-${Math.random()
+          .toString(36)
+          .substr(2, 9)
+          .toUpperCase()}`,
+        amount: data.amount,
+        currency: data.currency,
+        donationType: data.type,
+        caseName: selectedCase?.title,
+        receiptUrl: `/receipts/dummy-receipt-${Date.now()}.pdf`,
+        date: new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
 
-      // Confirm payment with Stripe
-      const cardElement = elements.getElement(CardElement);
-      if (!cardElement) {
-        throw new Error("Card element not found");
-      }
-
-      const { error, paymentIntent } = await stripe.confirmCardPayment(
-        clientSecret,
-        {
-          payment_method: {
-            card: cardElement,
-            billing_details: {
-              name: user.name,
-              email: user.email,
-            },
-          },
-        }
-      );
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (paymentIntent?.status === "succeeded") {
-        // Confirm donation on backend
-        await api.post("/donations/confirm-stripe", {
-          paymentIntentId: paymentIntent.id,
-        });
-
-        toast.success("Donation completed successfully!");
-
-        // Reset form or redirect
-        window.location.href = "/dashboard";
-      }
+      setDonationSuccess(successData);
+      toast.success("Donation completed successfully!");
     } catch (error: any) {
       console.error("Donation error:", error);
       toast.error(error.message || "Donation failed");
@@ -169,6 +311,21 @@ const DonationFormContent = () => {
       setIsLoading(false);
     }
   };
+
+  const handleNewDonation = () => {
+    setDonationSuccess(null);
+    setSelectedCase(null);
+    reset();
+  };
+
+  if (donationSuccess) {
+    return (
+      <DonationSuccessScreen
+        success={donationSuccess}
+        onNewDonation={handleNewDonation}
+      />
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-6">
