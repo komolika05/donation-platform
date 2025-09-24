@@ -55,57 +55,35 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-fit flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-gray-900">
-              Welcome back
-            </CardTitle>
-            <CardDescription>Sign in to your JKVIS account</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <Input
-                label="Email address"
-                type="email"
-                autoComplete="email"
-                error={errors.email?.message}
-                {...register("email")}
-              />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 my-4">
+          <Input
+            label="Email address"
+            type="email"
+            autoComplete="email"
+            error={errors.email?.message}
+            {...register("email")}
+          />
 
-              <Input
-                label="Password"
-                type="password"
-                autoComplete="current-password"
-                error={errors.password?.message}
-                {...register("password")}
-              />
+          <Input
+            label="Password"
+            type="password"
+            autoComplete="current-password"
+            error={errors.password?.message}
+            {...register("password")}
+          />
 
-              {errors.root && (
-                <div className="text-sm text-red-600 text-center">
-                  {errors.root.message}
-                </div>
-              )}
+          {errors.root && (
+            <div className="text-sm text-red-600 text-center">
+              {errors.root.message}
+            </div>
+          )}
 
-              <Button type="submit" className="w-full" loading={isLoading}>
-                Sign in
-              </Button>
-
-              <div className="text-center">
-                <p className="text-sm text-gray-600">
-                  Don't have an account?{" "}
-                  <Link
-                    href="/register"
-                    className="text-blue-600 hover:text-blue-500 font-medium"
-                  >
-                    Sign up
-                  </Link>
-                </p>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+          <Button type="submit" className="w-full" loading={isLoading}>
+            Sign in
+          </Button>
+        </form>
       </div>
     </div>
   );

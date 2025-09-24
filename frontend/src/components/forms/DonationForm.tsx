@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -24,6 +24,7 @@ import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 import type { CaseReport } from "@/types";
 import Input from "../ui/Input";
+import { useRouter } from "next/navigation";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
@@ -245,6 +246,16 @@ const DonationFormContent = () => {
   const [selectedCase, setSelectedCase] = useState<CaseReport | null>(null);
   const [donationSuccess, setDonationSuccess] =
     useState<DonationSuccess | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user) {
+      toast.error("Login to make donations");
+      router.push("/login");
+    }
+  }, [user, router]);
+
+  if (!user) return null;
 
   const {
     register,
