@@ -10,16 +10,21 @@ export interface User {
 }
 
 export interface Donation {
-  id: string;
-  donor: string | User;
+  _id: string;
+  donorId: string;
+  donorName: string;
+  donorEmail: string;
   amount: number;
-  currency: "USD" | "CAD";
-  type: "sponsorship" | "20kids20" | "general";
-  caseReport?: string | CaseReport;
-  paymentMethod: string;
+  currency: string;
+  type: "general" | "sponsorship" | "20kids20";
+  caseId?: string;
+  caseName?: string;
   transactionId: string;
-  date: string;
+  paymentMethod: string;
   status: "pending" | "completed" | "failed";
+  receiptUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface CaseReport {
@@ -99,4 +104,29 @@ export interface AuthResponse {
     user: User;
     token: string;
   };
+}
+
+export interface Case {
+  _id: string;
+  title: string;
+  description: string;
+  cost: number;
+  currency: string;
+  photoUrl?: string;
+  hospitalId: string;
+  hospitalName: string;
+  status: "active" | "completed" | "cancelled";
+  raisedAmount: number;
+  donationsCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DashboardStats {
+  totalDonations: number;
+  totalAmount: number;
+  totalCases: number;
+  activeCases: number;
+  completedCases: number;
+  recentDonations: Donation[];
 }

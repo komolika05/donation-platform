@@ -20,11 +20,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/Card";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, calculateProgress } from "@/lib/utils";
 import toast from "react-hot-toast";
-import type { CaseReport } from "@/types";
+import type { Case } from "@/types";
 import Input from "../ui/Input";
 import { useRouter } from "next/navigation";
+import { mockData } from "@/lib/api-client";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
@@ -242,20 +243,11 @@ const DonationFormContent = () => {
   const stripe = useStripe();
   const elements = useElements();
   const [isLoading, setIsLoading] = useState(false);
-  const [availableCases, setAvailableCases] = useState<CaseReport[]>([]);
-  const [selectedCase, setSelectedCase] = useState<CaseReport | null>(null);
+  const [availableCases, setAvailableCases] = useState<Case[]>([]);
+  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [donationSuccess, setDonationSuccess] =
     useState<DonationSuccess | null>(null);
   const router = useRouter();
-
-  useEffect(() => {
-    if (!user) {
-      toast.error("Login to make donations");
-      router.push("/login");
-    }
-  }, [user, router]);
-
-  if (!user) return null;
 
   const {
     register,
@@ -276,6 +268,21 @@ const DonationFormContent = () => {
   const watchType = watch("type");
   const watchAmount = watch("amount");
   const watchCurrency = watch("currency");
+
+  useEffect(() => {
+    if (!user) {
+      toast.error("Login to make donations");
+      router.push("/login");
+      return;
+    }
+
+    const activeCases = mockData.cases.filter(
+      (c: any) => c.status === "active"
+    );
+    setAvailableCases(activeCases);
+  }, [user, router]);
+
+  if (!user) return null;
 
   const onSubmit = async (data: DonationFormData) => {
     if (!user) {
@@ -404,37 +411,92 @@ const DonationFormContent = () => {
                   Select Case to Sponsor
                 </label>
                 <div className="grid gap-4">
-                  {availableCases.map((caseReport) => (
-                    <label key={caseReport.id} className="relative">
-                      <input
-                        type="radio"
-                        value={caseReport.id}
-                        {...register("caseReportId")}
-                        className="sr-only peer"
-                        onChange={() => setSelectedCase(caseReport)}
-                      />
-                      <div className="p-4 border border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-start space-x-4">
-                          <img
-                            src={caseReport.photoUrl || "/placeholder.svg"}
-                            alt={caseReport.title}
-                            className="w-16 h-16 object-cover rounded-lg"
+                  {availableCases.length > 0 ? (
+                    availableCases.map((caseItem) => {
+                      const progress = calculateProgress(
+                        caseItem.raisedAmount,
+                        caseItem.cost
+                      );
+                      return (
+                        <label key={caseItem._id} className="relative">
+                          <input
+                            type="radio"
+                            value={caseItem._id}
+                            {...register("caseReportId")}
+                            className="sr-only peer"
+                            onChange={() => setSelectedCase(caseItem)}
                           />
-                          <div className="flex-1">
-                            <h3 className="font-medium text-gray-900">
-                              {caseReport.title}
-                            </h3>
-                            <p className="text-sm text-gray-600 mt-1">
-                              {caseReport.description}
-                            </p>
-                            <p className="text-sm font-medium text-blue-600 mt-2">
-                              Cost: {formatCurrency(caseReport.cost)}
-                            </p>
+                          <div className="p-4 border border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 transition-colors">
+                            <div className="flex items-start space-x-4">
+                              <img
+                                src={
+                                  caseItem.photoUrl ||
+                                  "/placeholder.svg?height=80&width=80"
+                                }
+                                alt={caseItem.title}
+                                className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-medium text-gray-900 mb-1">
+                                  {caseItem.title}
+                                </h3>
+                                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                  {caseItem.description}
+                                </p>
+
+                                {/* Progress Bar */}
+                                <div className="mb-2">
+                                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                                    <span>
+                                      Progress: {Math.round(progress)}%
+                                    </span>
+                                    <span>
+                                      {caseItem.donationsCount} donors
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div
+                                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                      style={{ width: `${progress}%` }}
+                                    ></div>
+                                  </div>
+                                </div>
+
+                                {/* Funding Info */}
+                                <div className="flex justify-between items-center text-sm">
+                                  <div>
+                                    <span className="text-gray-600">
+                                      Raised:{" "}
+                                    </span>
+                                    <span className="font-medium text-green-600">
+                                      {formatCurrency(caseItem.raisedAmount)}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-600">
+                                      Goal:{" "}
+                                    </span>
+                                    <span className="font-medium">
+                                      {formatCurrency(caseItem.cost)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </label>
-                  ))}
+                        </label>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-8 border border-gray-200 rounded-lg">
+                      <p className="text-gray-500">
+                        No active cases available at the moment.
+                      </p>
+                      <p className="text-sm text-gray-400 mt-1">
+                        Please check back later or choose General Fund donation.
+                      </p>
+                    </div>
+                  )}
                 </div>
                 {errors.caseReportId && (
                   <p className="mt-1 text-sm text-red-600">
