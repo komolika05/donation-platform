@@ -1,4 +1,7 @@
 import express from "express";
+import dotenv from "dotenv";
+dotenv.config();
+
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
@@ -16,8 +19,6 @@ import reportRoutes from "./routes/reports";
 import userRoutes from "./routes/users";
 import adminRoutes from "./routes/admin";
 import receiptRoutes from "./routes/receipts";
-import dotenv from "dotenv";
-dotenv.config();
 
 const app = express();
 const PORT = process.env["PORT"];
@@ -104,12 +105,12 @@ app.get("/health", (_unused, res) => {
 });
 
 // API routes
-app.use("/api/auth", authRoutes);
-app.use("/api/donations", donationRoutes);
-app.use("/api/reports", reportRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/receipts", receiptRoutes);
+app.use("/auth", authRoutes);
+app.use("/donations", donationRoutes);
+app.use("/reports", reportRoutes);
+app.use("/users", userRoutes);
+app.use("/admin", adminRoutes);
+app.use("/receipts", receiptRoutes);
 
 // 404 handler
 app.use("*", (req, res) => {

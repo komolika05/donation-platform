@@ -20,7 +20,6 @@ export const handleValidationErrors = (
   return next();
 };
 
-// User registration validation
 export const validateRegistration = [
   body("name")
     .trim()

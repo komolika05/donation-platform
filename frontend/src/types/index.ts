@@ -60,7 +60,7 @@ export interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>;
+  register: (userData: RegisterData) => Promise<AuthResponse>;
   logout: () => void;
   loading: boolean;
 }
@@ -90,4 +90,13 @@ export interface PaginationData {
   totalItems: number;
   hasNextPage: boolean;
   hasPrevPage: boolean;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    user: User;
+    token: string;
+  };
 }

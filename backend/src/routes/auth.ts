@@ -2,11 +2,7 @@ import express, { Request, Response } from "express";
 import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import User from "../models/User";
 import { authenticate } from "../middleware/auth";
-import {
-  validateRegistration,
-  validateLogin,
-  validatePasswordChange,
-} from "../utils/validation";
+import { validateLogin, validatePasswordChange } from "../utils/validation";
 import logger from "../utils/logger";
 import type { AuthRequest } from "../middleware/auth";
 
@@ -25,73 +21,75 @@ const generateToken = (userId: string): string => {
 
   return jwt.sign(payload, secret, options);
 };
+router.post("/register", async (req: Request, res: Response) => {
+  try {
+    const { name, email, password, address, country, role } = req.body;
 
-// @route   POST /api/auth/register
-// @desc    Register a new user
-// @access  Public
-router.post(
-  "/register",
-  validateRegistration,
-  async (req: Request, res: Response) => {
-    try {
-      const { name, email, password, address, country, role } = req.body;
+    logger.info("new user details", {
+      name: name,
+      email: email,
+      password: password,
+      address: address,
+      country: country,
+      role: role,
+    });
 
-      logger.info("User registration attempt", {
-        email,
-        role: role || "donor",
-      });
+    logger.info("User registration attempt", {
+      email,
+      role: role || "donor",
+    });
 
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        logger.warn("Registration failed: User already exists", { email });
-        return res.status(400).json({
-          success: false,
-          message: "User with this email already exists",
-        });
-      }
-
-      const user = new User({
-        name,
-        email,
-        password,
-        address,
-        country,
-        role: role || "donor",
-      });
-      await user.save();
-
-      const token = generateToken(user._id!.toString());
-
-      logger.info("User registered successfully", {
-        userId: user._id,
-        email: user.email,
-        role: user.role,
-      });
-
-      return res.status(201).json({
-        success: true,
-        message: "User registered successfully",
-        data: {
-          user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            isEmailVerified: user.isEmailVerified,
-          },
-          token,
-        },
-      });
-    } catch (error: unknown) {
-      logger.error("Registration error:", error as Error);
-      return res.status(500).json({
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      logger.warn("Registration failed: User already exists", { email });
+      return res.status(400).json({
         success: false,
-        message:
-          (error as Error)?.message || "Server error during registration",
+        message: "User with this email already exists",
       });
     }
+
+    const user = new User({
+      name,
+      email,
+      password,
+      address,
+      country,
+      role: role || "donor",
+    });
+    await user.save();
+
+    logger.info("JWT Token", JWT_SECRET);
+
+    const token = generateToken(user._id!.toString());
+
+    logger.info("User registered successfully", {
+      userId: user._id,
+      email: user.email,
+      role: user.role,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isEmailVerified: user.isEmailVerified,
+        },
+        token,
+      },
+    });
+  } catch (error: unknown) {
+    logger.error("Registration error:", error as Error);
+    return res.status(500).json({
+      success: false,
+      message: (error as Error)?.message || "Server error during registration",
+    });
   }
-);
+});
 
 // @route   POST /api/auth/login
 // @desc    Login user

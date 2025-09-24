@@ -9,7 +9,7 @@ import Input from "@/components/ui/Input";
 import { useAuth } from "@/contexts/AuthContext";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import type { RegisterData } from "@/types";
+import type { AuthResponse, RegisterData } from "@/types";
 
 const schema = yup.object({
   firstName: yup.string().required("First name is required"),
@@ -17,12 +17,19 @@ const schema = yup.object({
   email: yup.string().email("Invalid email").required("Email is required"),
   password: yup
     .string()
-    .min(8, "Password must be at least 8 characters")
-    .required("Password is required"),
+    .required("Password is required")
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
+      "Password must contain at least one lowercase letter, one uppercase letter, and one number"
+    ),
   confirmPassword: yup
     .string()
+    .required("Please confirm your password")
     .oneOf([yup.ref("password")], "Passwords must match")
-    .required("Please confirm your password"),
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
+      "Password must contain at least one lowercase letter, one uppercase letter, and one number"
+    ),
   role: yup
     .string()
     .oneOf(["donor", "hospital-admin"], "Invalid role")
@@ -56,10 +63,14 @@ export function RegisterForm() {
   const onSubmit = async (data: RegisterData) => {
     try {
       setLoading(true);
-      await registerUser(data);
-      router.push("/dashboard");
+      console.log("submittind data", data);
+      const result = await registerUser(data);
+      if (result?.success) {
+        toast.success("Registration successful!");
+        router.push("/dashboard");
+      }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Registration failed");
+      toast.error(error.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -67,21 +78,18 @@ export function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Input
-            {...register("firstName")}
-            placeholder="First Name"
-            error={errors.firstName?.message}
-          />
-        </div>
-        <div>
-          <Input
-            {...register("lastName")}
-            placeholder="Last Name"
-            error={errors.lastName?.message}
-          />
-        </div>
+      <Input
+        {...register("firstName")}
+        placeholder="First Name"
+        error={errors.firstName?.message}
+      />
+
+      <div className="space-y-4">
+        <Input
+          {...register("lastName")}
+          placeholder="Last Name"
+          error={errors.lastName?.message}
+        />
       </div>
 
       <Input
@@ -104,7 +112,7 @@ export function RegisterForm() {
         error={errors.address?.message}
       />
 
-      <div>
+      <div className="mb-4">
         <select
           {...register("role")}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
