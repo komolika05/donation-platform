@@ -23,7 +23,8 @@ const generateToken = (userId: string): string => {
 };
 router.post("/register", async (req: Request, res: Response) => {
   try {
-    const { name, email, password, address, country, role } = req.body;
+    const { name, email, password, address, country, role, hospitalName } =
+      req.body;
 
     log("INFO", "new user details", {
       name: name,
@@ -32,6 +33,7 @@ router.post("/register", async (req: Request, res: Response) => {
       address: address,
       country: country,
       role: role,
+      hospitalName: hospitalName,
     });
 
     log("INFO", "User registration attempt", {
@@ -55,6 +57,7 @@ router.post("/register", async (req: Request, res: Response) => {
       address,
       country,
       role: role || "donor",
+      hospitalName: role === "hospital-admin" ? hospitalName : undefined,
     });
     await user.save();
 
@@ -78,6 +81,7 @@ router.post("/register", async (req: Request, res: Response) => {
           email: user.email,
           role: user.role,
           isEmailVerified: user.isEmailVerified,
+          hospitalName: user.hospitalName || null,
         },
         token,
       },
@@ -134,6 +138,7 @@ router.post("/login", validateLogin, async (req: Request, res: Response) => {
           email: user.email,
           role: user.role,
           isEmailVerified: user.isEmailVerified,
+          hospitalName: user.hospitalName || null,
         },
         token,
       },
@@ -167,6 +172,7 @@ router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
           role: user.role,
           isEmailVerified: user.isEmailVerified,
           createdAt: user.createdAt,
+          hospitalName: user.hospitalName || null,
         },
       },
     });

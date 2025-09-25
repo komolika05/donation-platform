@@ -5,6 +5,7 @@ export interface User {
   address?: string;
   country?: string;
   role: "donor" | "hospital-admin" | "super-admin";
+  hospitalName?: string;
   isEmailVerified: boolean;
   createdAt: string;
 }

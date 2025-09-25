@@ -45,6 +45,11 @@ const UserSchema: Schema = new Schema(
       },
       default: "donor",
     },
+    hospitalName: {
+      type: String,
+      trim: true,
+      maxlength: [200, "Hospital name cannot exceed 200 characters"],
+    },
     isEmailVerified: {
       type: Boolean,
       default: false,
@@ -65,6 +70,16 @@ const UserSchema: Schema = new Schema(
 UserSchema.index({ email: 1 });
 UserSchema.index({ role: 1 });
 UserSchema.index({ createdAt: -1 });
+
+UserSchema.pre("validate", function (next) {
+  if (this["role"] === "hospital-admin" && !this["hospitalName"]) {
+    this.invalidate(
+      "hospitalName",
+      "Hospital name is required for hospital-admin role"
+    );
+  }
+  next();
+});
 
 // Hash password before saving
 UserSchema.pre("save", async function (next) {

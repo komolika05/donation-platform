@@ -287,7 +287,7 @@ export default function NewCasePage() {
                   <div>
                     <span className="text-gray-600">Hospital:</span>
                     <span className="ml-2 font-medium">
-                      City General Hospital
+                      {user.hospitalName || "N/A"}
                     </span>
                   </div>
                   <div>

@@ -82,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         address: data.address,
         country: "India",
         role: data.role,
+        hospitalName: data?.hospitalName || null,
       });
 
       if (response.data.success) {
