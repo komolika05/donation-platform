@@ -33,8 +33,8 @@ const CaseReportSchema: Schema = new Schema(
       required: [true, "Photo URL is required"],
       trim: true,
     },
-    uploadedBy: {
-      type: Schema.Types.ObjectId,
+    HospitalId: {
+      type: String,
       ref: "User",
       required: [true, "Uploaded by user is required"],
     },
@@ -60,6 +60,7 @@ const CaseReportSchema: Schema = new Schema(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
+    collection: "deposit-tanks",
   }
 );
 

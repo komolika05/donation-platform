@@ -6,6 +6,7 @@ import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
 import path from "path";
+import { v2 as cloudinary } from "cloudinary";
 
 // Import utilities
 import connectDB from "./config/database";
@@ -26,6 +27,13 @@ const PORT = process.env["PORT"];
 // Connect to database
 connectDB();
 
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env["CLOUDINARY_CLOUD_NAME"] || "",
+  api_key: process.env["CLOUDINARY_API_KEY"] || "",
+  api_secret: process.env["CLOUDINARY_SECRET_KEY"] || "",
+});
+
 // Schedule cron jobs
 scheduleAnnualReceiptGeneration();
 
@@ -37,7 +45,7 @@ app.use(
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https:"],
+        imgSrc: ["'self'", "data:", "https://res.cloudinary.com"], // 👈 Added Cloudinary's domain
       },
     },
   })
@@ -69,9 +77,6 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Compression middleware
 app.use(compression());
-
-// Static files
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Request logging middleware
 app.use((req, _unused, next) => {

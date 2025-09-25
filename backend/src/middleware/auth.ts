@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction } from "express";
+import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User";
 import type { IUser } from "../types";
@@ -47,8 +47,6 @@ export const authenticate = async (
       email: user.email,
       role: user.role,
     });
-
-    next();
   } catch (error) {
     log("ERROR", "Authentication error:", error);
     res.status(401).json({
@@ -95,7 +93,7 @@ export const authorize = (...roles: string[]) => {
 };
 
 // Optional authentication (for routes that work with or without auth)
-export const optionalAuth = async (req: AuthRequest, next: NextFunction) => {
+export const optionalAuth = async (req: AuthRequest) => {
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "");
 
@@ -109,10 +107,7 @@ export const optionalAuth = async (req: AuthRequest, next: NextFunction) => {
         log("INFO", "Optional auth: User authenticated", { userId: user._id });
       }
     }
-
-    next();
   } catch (error) {
     log("WARN", "Optional auth failed, continuing without user:", error);
-    next();
   }
 };
