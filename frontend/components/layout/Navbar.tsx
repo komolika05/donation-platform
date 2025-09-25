@@ -41,7 +41,7 @@ export function Navbar() {
       ? [{ href: "/hospital-admin", label: "Admin Panel", icon: Settings }]
       : []),
     ...(user?.role === "super-admin"
-      ? [{ href: "/admin", label: "Super Admin", icon: Settings }]
+      ? [{ href: "/super-admin", label: "Super Admin", icon: Settings }]
       : []),
     { href: "/profile", label: "Profile", icon: User },
   ];
