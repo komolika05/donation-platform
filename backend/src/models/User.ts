@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 import type { IUser } from "../types";
-import logger from "../utils/logger";
+import log from "../utils/logger";
 
 const UserSchema: Schema = new Schema(
   {
@@ -45,6 +45,11 @@ const UserSchema: Schema = new Schema(
       },
       default: "donor",
     },
+    hospitalName: {
+      type: String,
+      trim: true,
+      maxlength: [200, "Hospital name cannot exceed 200 characters"],
+    },
     isEmailVerified: {
       type: Boolean,
       default: false,
@@ -66,17 +71,27 @@ UserSchema.index({ email: 1 });
 UserSchema.index({ role: 1 });
 UserSchema.index({ createdAt: -1 });
 
+UserSchema.pre("validate", function (next) {
+  if (this["role"] === "hospital-admin" && !this["hospitalName"]) {
+    this.invalidate(
+      "hospitalName",
+      "Hospital name is required for hospital-admin role"
+    );
+  }
+  next();
+});
+
 // Hash password before saving
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
   try {
-    logger.info("Hashing password for user", { email: this["email"] });
+    log("INFO", "Hashing password for user", { email: this["email"] });
     const salt = await bcrypt.genSalt(12);
     this["password"] = await bcrypt.hash(this["password"] as string, salt);
     next();
   } catch (error) {
-    logger.error("Error hashing password:", error);
+    log("ERROR", "Error hashing password:", error);
     next(error as Error);
   }
 });
@@ -86,10 +101,10 @@ UserSchema.methods["comparePassword"] = async function (
   candidatePassword: string
 ): Promise<boolean> {
   try {
-    logger.info("Comparing password for user", { email: this["email"] });
+    log("INFO", "Comparing password for user", { email: this["email"] });
     return await bcrypt.compare(candidatePassword, this["password"]);
   } catch (error) {
-    logger.error("Error comparing password:", error);
+    log("ERROR", "Error comparing password:", error);
     return false;
   }
 };

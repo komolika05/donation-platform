@@ -1,14 +1,14 @@
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
-import logger from "./logger";
+import log from "./logger";
 import type { IDonation, IUser } from "../types";
 
 // Ensure receipts directory exists
 const receiptsDir = path.join(__dirname, "../../uploads/receipts");
 if (!fs.existsSync(receiptsDir)) {
   fs.mkdirSync(receiptsDir, { recursive: true });
-  logger.info("Created receipts directory", { path: receiptsDir });
+  log("INFO", "Created receipts directory", { path: receiptsDir });
 }
 
 export interface ReceiptData {
@@ -24,7 +24,7 @@ export const generateReceiptPDF = async (
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     try {
-      logger.info("Generating PDF receipt", {
+      log("INFO", "Generating PDF receipt", {
         donorId: receiptData.donor._id,
         year: receiptData.year,
         receiptNumber: receiptData.receiptNumber,
@@ -222,7 +222,7 @@ export const generateReceiptPDF = async (
 
       // Wait for the PDF to be written
       doc.on("end", () => {
-        logger.info("PDF receipt generated successfully", {
+        log("INFO", "PDF receipt generated successfully", {
           filename,
           filepath,
           donorId: receiptData.donor._id,
@@ -231,11 +231,11 @@ export const generateReceiptPDF = async (
       });
 
       doc.on("error", (error) => {
-        logger.error("Error generating PDF receipt:", error);
+        log("ERROR", "Error generating PDF receipt:", error);
         reject(error);
       });
     } catch (error) {
-      logger.error("Error in generateReceiptPDF:", error);
+      log("ERROR", "Error in generateReceiptPDF:", error);
       reject(error);
     }
   });

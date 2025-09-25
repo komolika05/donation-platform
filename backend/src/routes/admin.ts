@@ -5,7 +5,7 @@ import CaseReport from "../models/CaseReport";
 import Receipt from "../models/Receipt";
 import { authenticate, authorize, type AuthRequest } from "../middleware/auth";
 import { body, validationResult } from "express-validator";
-import logger from "../utils/logger";
+import log from "../utils/logger";
 
 const router = express.Router();
 
@@ -18,7 +18,7 @@ router.get(
   authorize("super-admin"),
   async (req: AuthRequest, res) => {
     try {
-      logger.info("Admin dashboard requested", { userId: req.user!._id });
+      log("INFO", "Admin dashboard requested", { userId: req.user!._id });
 
       // Get comprehensive statistics
       const [
@@ -144,7 +144,7 @@ router.get(
         },
       };
 
-      logger.info("Admin dashboard data compiled successfully", {
+      log("INFO", "Admin dashboard data compiled successfully", {
         userId: req.user!._id,
         totalUsers,
         totalDonations,
@@ -156,7 +156,7 @@ router.get(
         data: dashboardData,
       });
     } catch (error) {
-      logger.error("Error fetching admin dashboard:", error);
+      log("ERROR", "Error fetching admin dashboard:", error);
       res.status(500).json({
         success: false,
         message: "Server error fetching dashboard data",
@@ -180,7 +180,7 @@ router.get(
       const role = req.query["role"] as string;
       const search = req.query["search"] as string;
 
-      logger.info("Admin users list requested", {
+      log("INFO", "Admin users list requested", {
         userId: req.user!._id,
         page,
         limit,
@@ -207,7 +207,7 @@ router.get(
 
       const totalPages = Math.ceil(totalUsers / limit);
 
-      logger.info("Admin users list fetched successfully", {
+      log("INFO", "Admin users list fetched successfully", {
         userId: req.user!._id,
         usersCount: users.length,
         totalUsers,
@@ -227,7 +227,7 @@ router.get(
         },
       });
     } catch (error) {
-      logger.error("Error fetching users list:", error);
+      log("ERROR", "Error fetching users list:", error);
       res.status(500).json({
         success: false,
         message: "Server error fetching users",
@@ -262,7 +262,7 @@ router.put(
       const { id } = req.params;
       const { role } = req.body;
 
-      logger.info("Updating user role", {
+      log("INFO", "Updating user role", {
         adminId: req.user!._id,
         targetUserId: id,
         newRole: role,
@@ -288,7 +288,7 @@ router.put(
       user.role = role;
       await user.save();
 
-      logger.info("User role updated successfully", {
+      log("INFO", "User role updated successfully", {
         adminId: req.user!._id,
         targetUserId: id,
         oldRole,
@@ -308,7 +308,7 @@ router.put(
         },
       });
     } catch (error) {
-      logger.error("Error updating user role:", error);
+      log("ERROR", "Error updating user role:", error);
       res.status(500).json({
         success: false,
         message: "Server error updating user role",
@@ -328,7 +328,7 @@ router.delete(
     try {
       const { id } = req.params;
 
-      logger.info("Deleting user account", {
+      log("INFO", "Deleting user account", {
         adminId: req.user!._id,
         targetUserId: id,
       });
@@ -369,7 +369,7 @@ router.delete(
 
       await User.findByIdAndDelete(id);
 
-      logger.info("User account deleted successfully", {
+      log("INFO", "User account deleted successfully", {
         adminId: req.user!._id,
         deletedUserId: id,
         deletedUserEmail: user.email,
@@ -380,7 +380,7 @@ router.delete(
         message: "User account deleted successfully",
       });
     } catch (error) {
-      logger.error("Error deleting user account:", error);
+      log("ERROR", "Error deleting user account:", error);
       res.status(500).json({
         success: false,
         message: "Server error deleting user account",
@@ -406,7 +406,7 @@ router.get(
       const startDate = req.query["startDate"] as string;
       const endDate = req.query["endDate"] as string;
 
-      logger.info("Admin donations list requested", {
+      log("INFO", "Admin donations list requested", {
         userId: req.user!._id,
         page,
         limit,
@@ -448,7 +448,7 @@ router.get(
         { $group: { _id: null, total: { $sum: "$amount" } } },
       ]);
 
-      logger.info("Admin donations list fetched successfully", {
+      log("INFO", "Admin donations list fetched successfully", {
         userId: req.user!._id,
         donationsCount: donations.length,
         totalDonations,
@@ -472,7 +472,7 @@ router.get(
         },
       });
     } catch (error) {
-      logger.error("Error fetching donations list:", error);
+      log("ERROR", "Error fetching donations list:", error);
       res.status(500).json({
         success: false,
         message: "Server error fetching donations",
@@ -490,7 +490,7 @@ router.get(
   authorize("super-admin"),
   async (req: AuthRequest, res) => {
     try {
-      logger.info("Admin reports analytics requested", {
+      log("INFO", "Admin reports analytics requested", {
         userId: req.user!._id,
       });
 
@@ -604,7 +604,7 @@ router.get(
         },
       };
 
-      logger.info("Admin reports analytics compiled successfully", {
+      log("INFO", "Admin reports analytics compiled successfully", {
         userId: req.user!._id,
         analytics,
       });
@@ -616,7 +616,7 @@ router.get(
         },
       });
     } catch (error) {
-      logger.error("Error fetching reports analytics:", error);
+      log("ERROR", "Error fetching reports analytics:", error);
       res.status(500).json({
         success: false,
         message: "Server error fetching analytics",
@@ -634,7 +634,7 @@ router.get(
   authorize("super-admin"),
   async (req: AuthRequest, res) => {
     try {
-      logger.info("System health check requested", { userId: req.user!._id });
+      log("INFO", "System health check requested", { userId: req.user!._id });
 
       const [dbStats, recentErrors, activeUsers, systemMetrics] =
         await Promise.all([
@@ -697,7 +697,7 @@ router.get(
         },
       };
 
-      logger.info("System health data compiled successfully", {
+      log("INFO", "System health data compiled successfully", {
         userId: req.user!._id,
         healthData,
       });
@@ -707,7 +707,7 @@ router.get(
         data: healthData,
       });
     } catch (error) {
-      logger.error("Error fetching system health:", error);
+      log("ERROR", "Error fetching system health:", error);
       res.status(500).json({
         success: false,
         message: "Server error fetching system health",

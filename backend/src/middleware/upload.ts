@@ -1,44 +1,9 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
-import logger from "../utils/logger";
+import log from "../utils/logger";
 
-// Ensure upload directory exists
-const uploadDir = process.env["UPLOAD_PATH"] || "./uploads";
-const caseReportsDir = path.join(uploadDir, "case-reports");
+// Configure multer to use memory storage
+const storage = multer.memoryStorage();
 
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  logger.info("Created upload directory", { path: uploadDir });
-}
-
-if (!fs.existsSync(caseReportsDir)) {
-  fs.mkdirSync(caseReportsDir, { recursive: true });
-  logger.info("Created case reports directory", { path: caseReportsDir });
-}
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, caseReportsDir);
-  },
-  filename: (_req, file, cb) => {
-    // Generate unique filename with timestamp and random string
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const extension = path.extname(file.originalname);
-    const filename = `case-report-${uniqueSuffix}${extension}`;
-
-    logger.info("Generating filename for upload", {
-      originalName: file.originalname,
-      generatedName: filename,
-      mimetype: file.mimetype,
-    });
-
-    cb(null, filename);
-  },
-});
-
-// File filter to only allow images
 const fileFilter = (
   _req: any,
   file: Express.Multer.File,
@@ -53,13 +18,13 @@ const fileFilter = (
   ];
 
   if (allowedMimeTypes.includes(file.mimetype)) {
-    logger.info("File type accepted", {
+    log("INFO", "File type accepted", {
       filename: file.originalname,
       mimetype: file.mimetype,
     });
     cb(null, true);
   } else {
-    logger.warn("File type rejected", {
+    log("WARN", "File type rejected", {
       filename: file.originalname,
       mimetype: file.mimetype,
     });
@@ -85,7 +50,7 @@ export const handleUploadError = (
   next: any
 ) => {
   if (error instanceof multer.MulterError) {
-    logger.error("Multer upload error:", error);
+    log("ERROR", "Multer upload error:", error);
 
     switch (error.code) {
       case "LIMIT_FILE_SIZE":
@@ -110,7 +75,7 @@ export const handleUploadError = (
         });
     }
   } else if (error) {
-    logger.error("Upload error:", error);
+    log("ERROR", "Upload error:", error);
     return res.status(400).json({
       success: false,
       message: error.message || "File upload failed.",
@@ -121,4 +86,3 @@ export const handleUploadError = (
 };
 
 export const uploadSingle = upload.single("photo");
-export { caseReportsDir };
