@@ -1,4 +1,4 @@
-# JKVIS Web Platform
+# Donation Platform
 
 A comprehensive MERN stack donation management platform for non-profit organizations, built with TypeScript and featuring automated tax receipt generation, case report management, and multi-role user system.
 
