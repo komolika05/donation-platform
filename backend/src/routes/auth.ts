@@ -3,7 +3,7 @@ import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import User from "../models/User";
 import { authenticate } from "../middleware/auth";
 import { validateLogin, validatePasswordChange } from "../utils/validation";
-import logger from "../utils/logger";
+import log from "../utils/logger";
 import type { AuthRequest } from "../middleware/auth";
 
 const router = express.Router();
@@ -25,7 +25,7 @@ router.post("/register", async (req: Request, res: Response) => {
   try {
     const { name, email, password, address, country, role } = req.body;
 
-    logger.info("new user details", {
+    log("INFO", "new user details", {
       name: name,
       email: email,
       password: password,
@@ -34,14 +34,14 @@ router.post("/register", async (req: Request, res: Response) => {
       role: role,
     });
 
-    logger.info("User registration attempt", {
+    log("INFO", "User registration attempt", {
       email,
       role: role || "donor",
     });
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      logger.warn("Registration failed: User already exists", { email });
+      log("WARN", "Registration failed: User already exists", { email });
       return res.status(400).json({
         success: false,
         message: "User with this email already exists",
@@ -58,11 +58,11 @@ router.post("/register", async (req: Request, res: Response) => {
     });
     await user.save();
 
-    logger.info("JWT Token", JWT_SECRET);
+    log("INFO", "JWT Token", JWT_SECRET);
 
     const token = generateToken(user._id!.toString());
 
-    logger.info("User registered successfully", {
+    log("INFO", "User registered successfully", {
       userId: user._id,
       email: user.email,
       role: user.role,
@@ -83,7 +83,7 @@ router.post("/register", async (req: Request, res: Response) => {
       },
     });
   } catch (error: unknown) {
-    logger.error("Registration error:", error as Error);
+    log("ERROR", "Registration error:", error as Error);
     return res.status(500).json({
       success: false,
       message: (error as Error)?.message || "Server error during registration",
@@ -98,11 +98,11 @@ router.post("/login", validateLogin, async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    logger.info("User login attempt", { email });
+    log("INFO", "User login attempt", { email });
 
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
-      logger.warn("Login failed: User not found", { email });
+      log("WARN", "Login failed: User not found", { email });
       return res
         .status(401)
         .json({ success: false, message: "Invalid email or password" });
@@ -110,7 +110,7 @@ router.post("/login", validateLogin, async (req: Request, res: Response) => {
 
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      logger.warn("Login failed: Invalid password", { email });
+      log("WARN", "Login failed: Invalid password", { email });
       return res
         .status(401)
         .json({ success: false, message: "Invalid email or password" });
@@ -118,7 +118,7 @@ router.post("/login", validateLogin, async (req: Request, res: Response) => {
 
     const token = generateToken(user._id!.toString());
 
-    logger.info("User logged in successfully", {
+    log("INFO", "User logged in successfully", {
       userId: user._id,
       email: user.email,
       role: user.role,
@@ -139,7 +139,7 @@ router.post("/login", validateLogin, async (req: Request, res: Response) => {
       },
     });
   } catch (error: unknown) {
-    logger.error("Login error:", error as Error);
+    log("ERROR", "Login error:", error as Error);
     return res.status(500).json({
       success: false,
       message: (error as Error)?.message || "Server error during login",
@@ -153,7 +153,7 @@ router.post("/login", validateLogin, async (req: Request, res: Response) => {
 router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const user = req.user!;
-    logger.info("Profile requested", { userId: user._id });
+    log("INFO", "Profile requested", { userId: user._id });
 
     return res.json({
       success: true,
@@ -171,7 +171,7 @@ router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
       },
     });
   } catch (error: unknown) {
-    logger.error("Profile fetch error:", error as Error);
+    log("ERROR", "Profile fetch error:", error as Error);
     return res.status(500).json({
       success: false,
       message: (error as Error)?.message || "Server error fetching profile",
@@ -190,7 +190,7 @@ router.put(
       const { name, address, country } = req.body;
       const user = req.user!;
 
-      logger.info("Profile update attempt", { userId: user._id });
+      log("INFO", "Profile update attempt", { userId: user._id });
 
       if (name) user.name = name;
       if (address !== undefined) user.address = address;
@@ -198,7 +198,7 @@ router.put(
 
       await user.save();
 
-      logger.info("Profile updated successfully", { userId: user._id });
+      log("INFO", "Profile updated successfully", { userId: user._id });
 
       return res.json({
         success: true,
@@ -216,7 +216,7 @@ router.put(
         },
       });
     } catch (error: unknown) {
-      logger.error("Profile update error:", error as Error);
+      log("ERROR", "Profile update error:", error as Error);
       return res.status(500).json({
         success: false,
         message: (error as Error)?.message || "Server error updating profile",
@@ -243,13 +243,13 @@ router.put(
           .json({ success: false, message: "User not found" });
       }
 
-      logger.info("Password change attempt", { userId: user._id });
+      log("INFO", "Password change attempt", { userId: user._id });
 
       const isCurrentPasswordValid = await user.comparePassword(
         currentPassword
       );
       if (!isCurrentPasswordValid) {
-        logger.warn("Password change failed: Invalid current password", {
+        log("WARN", "Password change failed: Invalid current password", {
           userId: user._id,
         });
         return res
@@ -260,14 +260,14 @@ router.put(
       user.password = newPassword;
       await user.save();
 
-      logger.info("Password changed successfully", { userId: user._id });
+      log("INFO", "Password changed successfully", { userId: user._id });
 
       return res.json({
         success: true,
         message: "Password changed successfully",
       });
     } catch (error: unknown) {
-      logger.error("Password change error:", error as Error);
+      log("ERROR", "Password change error:", error as Error);
       return res.status(500).json({
         success: false,
         message: (error as Error)?.message || "Server error changing password",
@@ -280,7 +280,7 @@ router.put(
 // @desc    Logout user
 // @access  Private
 router.post("/logout", authenticate, (req: AuthRequest, res: Response) => {
-  logger.info("User logged out", { userId: req.user!._id });
+  log("INFO", "User logged out", { userId: req.user!._id });
   return res.json({ success: true, message: "Logged out successfully" });
 });
 

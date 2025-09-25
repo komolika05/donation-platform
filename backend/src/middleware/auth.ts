@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User";
 import type { IUser } from "../types";
-import logger from "../utils/logger";
+import log from "../utils/logger";
 
 // Extend Request interface to include user
 export interface AuthRequest extends Request {
@@ -19,7 +19,7 @@ export const authenticate = async (
     const token = req.header("Authorization")?.replace("Bearer ", "");
 
     if (!token) {
-      logger.warn("Authentication failed: No token provided", { ip: req.ip });
+      log("WARN", "Authentication failed: No token provided", { ip: req.ip });
       return res.status(401).json({
         success: false,
         message: "Access denied. No token provided.",
@@ -32,7 +32,7 @@ export const authenticate = async (
     const user = await User.findById(decoded.userId).select("+password");
 
     if (!user) {
-      logger.warn("Authentication failed: User not found", {
+      log("WARN", "Authentication failed: User not found", {
         userId: decoded.userId,
       });
       return res.status(401).json({
@@ -42,7 +42,7 @@ export const authenticate = async (
     }
 
     req.user = user;
-    logger.info("User authenticated successfully", {
+    log("INFO", "User authenticated successfully", {
       userId: user._id,
       email: user.email,
       role: user.role,
@@ -50,7 +50,7 @@ export const authenticate = async (
 
     next();
   } catch (error) {
-    logger.error("Authentication error:", error);
+    log("ERROR", "Authentication error:", error);
     res.status(401).json({
       success: false,
       message: "Invalid token.",
@@ -65,7 +65,7 @@ export const authenticate = async (
 export const authorize = (...roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
-      logger.error("Authorization failed: No user in request");
+      log("ERROR", "Authorization failed: No user in request");
       return res.status(401).json({
         success: false,
         message: "Access denied. Please authenticate first.",
@@ -73,7 +73,7 @@ export const authorize = (...roles: string[]) => {
     }
 
     if (!roles.includes(req.user.role)) {
-      logger.warn("Authorization failed: Insufficient permissions", {
+      log("WARN", "Authorization failed: Insufficient permissions", {
         userId: req.user._id,
         userRole: req.user.role,
         requiredRoles: roles,
@@ -84,7 +84,7 @@ export const authorize = (...roles: string[]) => {
       });
     }
 
-    logger.info("User authorized successfully", {
+    log("INFO", "User authorized successfully", {
       userId: req.user._id,
       role: req.user.role,
       requiredRoles: roles,
@@ -106,13 +106,13 @@ export const optionalAuth = async (req: AuthRequest, next: NextFunction) => {
       const user = await User.findById(decoded.userId);
       if (user) {
         req.user = user;
-        logger.info("Optional auth: User authenticated", { userId: user._id });
+        log("INFO", "Optional auth: User authenticated", { userId: user._id });
       }
     }
 
     next();
   } catch (error) {
-    logger.warn("Optional auth failed, continuing without user:", error);
+    log("WARN", "Optional auth failed, continuing without user:", error);
     next();
   }
 };

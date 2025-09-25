@@ -1,4 +1,4 @@
-import logger from "./logger"
+import log from "./logger";
 
 // Exchange rates (in production, use a real API like exchangerate-api.com)
 const EXCHANGE_RATES: Record<string, Record<string, number>> = {
@@ -10,50 +10,59 @@ const EXCHANGE_RATES: Record<string, Record<string, number>> = {
     CAD: 1,
     USD: 0.74,
   },
-}
+};
 
-export const convertCurrency = async (amount: number, fromCurrency: string, toCurrency: string): Promise<number> => {
+export const convertCurrency = async (
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string
+): Promise<number> => {
   try {
     if (fromCurrency === toCurrency) {
-      return amount
+      return amount;
     }
 
-    logger.info("Converting currency", {
+    log("INFO", "Converting currency", {
       amount,
       fromCurrency,
       toCurrency,
-    })
+    });
 
-    const rate = EXCHANGE_RATES[fromCurrency]?.[toCurrency]
+    const rate = EXCHANGE_RATES[fromCurrency]?.[toCurrency];
 
     if (!rate) {
-      throw new Error(`Exchange rate not available for ${fromCurrency} to ${toCurrency}`)
+      throw new Error(
+        `Exchange rate not available for ${fromCurrency} to ${toCurrency}`
+      );
     }
 
-    const convertedAmount = Math.round(amount * rate * 100) / 100
+    const convertedAmount = Math.round(amount * rate * 100) / 100;
 
-    logger.info("Currency conversion completed", {
+    log("INFO", "Currency conversion completed", {
       originalAmount: amount,
       convertedAmount,
       rate,
       fromCurrency,
       toCurrency,
-    })
+    });
 
-    return convertedAmount
+    return convertedAmount;
   } catch (error) {
-    logger.error("Currency conversion failed:", error)
-    throw error
+    log("ERROR", "Currency conversion failed:", error);
+    throw error;
   }
-}
+};
 
 export const getSupportedCurrencies = (): string[] => {
-  return Object.keys(EXCHANGE_RATES)
-}
+  return Object.keys(EXCHANGE_RATES);
+};
 
-export const getExchangeRate = (fromCurrency: string, toCurrency: string): number | null => {
-  return EXCHANGE_RATES[fromCurrency]?.[toCurrency] || null
-}
+export const getExchangeRate = (
+  fromCurrency: string,
+  toCurrency: string
+): number | null => {
+  return EXCHANGE_RATES[fromCurrency]?.[toCurrency] || null;
+};
 
 export const formatCurrency = (amount: number, currency: string): string => {
   const formatter = new Intl.NumberFormat("en-US", {
@@ -61,7 +70,7 @@ export const formatCurrency = (amount: number, currency: string): string => {
     currency: currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })
+  });
 
-  return formatter.format(amount)
-}
+  return formatter.format(amount);
+};

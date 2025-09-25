@@ -10,7 +10,7 @@ import {
   executePayPalPayment,
   stripe,
 } from "../utils/paymentService";
-import logger from "../utils/logger";
+import log from "../utils/logger";
 
 const router = express.Router();
 
@@ -54,7 +54,7 @@ router.post(
       const { amount, currency, type, caseReportId } = req.body;
       const userId = req.user!._id;
 
-      logger.info("Creating payment intent", {
+      log("INFO", "Creating payment intent", {
         userId,
         amount,
         currency,
@@ -104,7 +104,7 @@ router.post(
         caseReportId: caseReportId || "",
       });
 
-      logger.info("Payment intent created successfully", {
+      log("INFO", "Payment intent created successfully", {
         paymentIntentId: paymentIntent.id,
         userId,
       });
@@ -117,7 +117,7 @@ router.post(
         },
       });
     } catch (error) {
-      logger.error("Error creating payment intent:", error);
+      log("ERROR", "Error creating payment intent:", error);
       res.status(500).json({
         success: false,
         message: "Server error creating payment intent",
@@ -146,7 +146,7 @@ router.post(
       const { amount, currency, type, caseReportId } = req.body;
       const userId = req.user!._id;
 
-      logger.info("Creating PayPal payment", {
+      log("INFO", "Creating PayPal payment", {
         userId,
         amount,
         currency,
@@ -191,7 +191,7 @@ router.post(
         description
       );
 
-      logger.info("PayPal payment created successfully", {
+      log("INFO", "PayPal payment created successfully", {
         paymentId: payment.id,
         userId,
       });
@@ -201,7 +201,7 @@ router.post(
         data: { paymentId: payment.id, approvalUrl: payment.approvalUrl },
       });
     } catch (error) {
-      logger.error("Error creating PayPal payment:", error);
+      log("ERROR", "Error creating PayPal payment:", error);
       res.status(500).json({
         success: false,
         message: "Server error creating PayPal payment",
@@ -226,7 +226,7 @@ router.post(
         return;
       }
 
-      logger.info("Confirming Stripe payment", { paymentIntentId, userId });
+      log("INFO", "Confirming Stripe payment", { paymentIntentId, userId });
 
       const paymentIntent = await confirmStripePayment(paymentIntentId);
 
@@ -262,7 +262,7 @@ router.post(
         });
       }
 
-      logger.info("Donation created successfully", {
+      log("INFO", "Donation created successfully", {
         donationId: donation._id,
         userId,
         amount: donation.amount,
@@ -282,7 +282,7 @@ router.post(
         },
       });
     } catch (error) {
-      logger.error("Error confirming Stripe payment:", error);
+      log("ERROR", "Error confirming Stripe payment:", error);
       res
         .status(500)
         .json({ success: false, message: "Server error confirming payment" });
@@ -307,7 +307,7 @@ router.post(
         return;
       }
 
-      logger.info("Confirming PayPal payment", { paymentId, payerId, userId });
+      log("INFO", "Confirming PayPal payment", { paymentId, payerId, userId });
 
       const payment = await executePayPalPayment(paymentId, payerId);
 
@@ -338,7 +338,7 @@ router.post(
         });
       }
 
-      logger.info("PayPal donation created successfully", {
+      log("INFO", "PayPal donation created successfully", {
         donationId: donation._id,
         userId,
         amount: donation.amount,
@@ -358,7 +358,7 @@ router.post(
         },
       });
     } catch (error) {
-      logger.error("Error confirming PayPal payment:", error);
+      log("ERROR", "Error confirming PayPal payment:", error);
       res.status(500).json({
         success: false,
         message: "Server error confirming PayPal payment",
@@ -378,7 +378,7 @@ router.get(
       const limit = parseInt(req.query["limit"] as string) || 10;
       const skip = (page - 1) * limit;
 
-      logger.info("Fetching user donations", { userId, page, limit });
+      log("INFO", "Fetching user donations", { userId, page, limit });
 
       const donations = await Donation.find({ donor: userId })
         .populate("caseReport", "title description cost photoUrl")
@@ -403,7 +403,7 @@ router.get(
         },
       });
     } catch (error) {
-      logger.error("Error fetching user donations:", error);
+      log("ERROR", "Error fetching user donations:", error);
       res
         .status(500)
         .json({ success: false, message: "Server error fetching donations" });
@@ -430,7 +430,7 @@ router.get(
 
       res.json({ success: true, data: { cases } });
     } catch (error) {
-      logger.error("Error fetching available cases:", error);
+      log("ERROR", "Error fetching available cases:", error);
       res.status(500).json({
         success: false,
         message: "Server error fetching available cases",
@@ -451,9 +451,9 @@ router.post(
 
     try {
       event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-      logger.info("Stripe webhook received", { eventType: event.type });
+      log("INFO", "Stripe webhook received", { eventType: event.type });
     } catch (err) {
-      logger.error("Stripe webhook signature verification failed:", err);
+      log("ERROR", "Stripe webhook signature verification failed:", err);
       res.status(400).send("Webhook signature verification failed");
       return;
     }
@@ -461,7 +461,7 @@ router.post(
     try {
       switch (event.type) {
         case "payment_intent.succeeded":
-          logger.info("Payment intent succeeded", {
+          log("INFO", "Payment intent succeeded", {
             paymentIntentId: event.data.object.id,
           });
           break;
@@ -470,19 +470,19 @@ router.post(
             { transactionId: event.data.object.id },
             { status: "failed" }
           );
-          logger.warn("Payment intent failed", {
+          log("WARN", "Payment intent failed", {
             paymentIntentId: event.data.object.id,
           });
           break;
         default:
-          logger.info("Unhandled Stripe webhook event", {
+          log("INFO", "Unhandled Stripe webhook event", {
             eventType: event.type,
           });
       }
 
       res.json({ received: true });
     } catch (error) {
-      logger.error("Error processing Stripe webhook:", error);
+      log("ERROR", "Error processing Stripe webhook:", error);
       res.status(500).json({ error: "Webhook processing failed" });
     }
   }
