@@ -8,7 +8,7 @@ import {
   calculateEligibleAmount,
 } from "./receiptGenerator";
 import { sendReceiptEmail } from "./emailService";
-import logger from "./logger";
+import log from "./logger";
 
 // Type for Receipt document
 type ReceiptDoc = InstanceType<typeof Receipt>;
@@ -18,7 +18,7 @@ export const scheduleAnnualReceiptGeneration = (): void => {
   cron.schedule(
     "0 2 1 1 *", // At 02:00 on January 1st
     async () => {
-      logger.info("Starting annual receipt generation job");
+      log("INFO", "Starting annual receipt generation job");
       await generateAnnualReceipts();
     },
     {
@@ -27,7 +27,8 @@ export const scheduleAnnualReceiptGeneration = (): void => {
     }
   );
 
-  logger.info(
+  log(
+    "INFO",
     "Annual receipt generation job scheduled for January 1st at 2:00 AM"
   );
 };
@@ -37,7 +38,7 @@ export const generateAnnualReceipts = async (year?: number): Promise<void> => {
   try {
     const targetYear = year || new Date().getFullYear() - 1; // Previous year by default
 
-    logger.info("Generating annual receipts", { year: targetYear });
+    log("INFO", "Generating annual receipts", { year: targetYear });
 
     const donorsWithDonations = await Donation.aggregate([
       {
@@ -69,7 +70,8 @@ export const generateAnnualReceipts = async (year?: number): Promise<void> => {
       },
     ]);
 
-    logger.info(
+    log(
+      "INFO",
       `Found ${donorsWithDonations.length} donors with donations in ${targetYear}`
     );
 
@@ -84,7 +86,7 @@ export const generateAnnualReceipts = async (year?: number): Promise<void> => {
         });
 
         if (existingReceipt) {
-          logger.info("Receipt already exists, skipping", {
+          log("INFO", "Receipt already exists, skipping", {
             donorId: donorData._id,
             year: targetYear,
             receiptNumber: existingReceipt.receiptNumber,
@@ -134,7 +136,7 @@ export const generateAnnualReceipts = async (year?: number): Promise<void> => {
         await sendReceiptEmail(donorData.donor, receipt, pdfPath);
 
         successCount++;
-        logger.info("Receipt generated and sent successfully", {
+        log("INFO", "Receipt generated and sent successfully", {
           donorId: donorData._id,
           donorEmail: donorData.donor.email,
           receiptNumber,
@@ -142,7 +144,7 @@ export const generateAnnualReceipts = async (year?: number): Promise<void> => {
         });
       } catch (error) {
         errorCount++;
-        logger.error("Error generating receipt for donor", {
+        log("ERROR", "Error generating receipt for donor", {
           error,
           donorId: donorData._id,
           donorEmail: donorData.donor.email,
@@ -151,14 +153,14 @@ export const generateAnnualReceipts = async (year?: number): Promise<void> => {
       }
     }
 
-    logger.info("Annual receipt generation completed", {
+    log("INFO", "Annual receipt generation completed", {
       year: targetYear,
       totalDonors: donorsWithDonations.length,
       successCount,
       errorCount,
     });
   } catch (error) {
-    logger.error("Error in annual receipt generation job:", error);
+    log("ERROR", "Error in annual receipt generation job:", error);
     throw error;
   }
 };
@@ -169,7 +171,7 @@ export const generateReceiptForDonor = async (
   year: number
 ): Promise<ReceiptDoc> => {
   try {
-    logger.info("Generating receipt for specific donor", { donorId, year });
+    log("INFO", "Generating receipt for specific donor", { donorId, year });
 
     const donor = await User.findById(donorId);
     if (!donor) throw new Error("Donor not found");
@@ -191,7 +193,7 @@ export const generateReceiptForDonor = async (
     let receipt = await Receipt.findOne({ donor: donorId, year });
 
     if (receipt) {
-      logger.info("Receipt already exists", {
+      log("INFO", "Receipt already exists", {
         donorId,
         year,
         receiptNumber: receipt.receiptNumber,
@@ -236,7 +238,7 @@ export const generateReceiptForDonor = async (
 
     await sendReceiptEmail(donor, receipt, pdfPath);
 
-    logger.info("Receipt generated successfully for donor", {
+    log("INFO", "Receipt generated successfully for donor", {
       donorId,
       receiptNumber,
       totalAmount: eligibleAmount,
@@ -244,7 +246,7 @@ export const generateReceiptForDonor = async (
 
     return receipt;
   } catch (error) {
-    logger.error("Error generating receipt for donor:", {
+    log("ERROR", "Error generating receipt for donor:", {
       error,
       donorId,
       year,

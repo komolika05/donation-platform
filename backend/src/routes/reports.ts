@@ -4,6 +4,9 @@ import CaseReport from "../models/CaseReport";
 import { authenticate, authorize, type AuthRequest } from "../middleware/auth";
 import { uploadSingle, handleUploadError } from "../middleware/upload";
 import { body, validationResult } from "express-validator";
+import streamifier from "streamifier";
+import { v2 as cloudinary } from "cloudinary";
+import log from "../utils/logger";
 
 const router = express.Router();
 
@@ -35,10 +38,11 @@ router.post(
   handleUploadError,
   validateCaseReport,
   async (req: AuthRequest, res: Response): Promise<void> => {
+    log("DEBUG", "Reaching /upload endpoint");
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        if (req.file) fs.unlinkSync(req.file.path);
+        log("ERROR", "Validation failed", errors.array());
         res.status(400).json({
           success: false,
           message: "Validation failed",
@@ -48,6 +52,7 @@ router.post(
       }
 
       if (!req.file) {
+        log("ERROR", "Missing Image File");
         res.status(400).json({ success: false, message: "Photo is required" });
         return;
       }
@@ -55,7 +60,51 @@ router.post(
       const { title, description, cost, fundType } = req.body;
       const userId = String(req.user!._id);
 
-      const photoUrl = `/uploads/case-reports/${req.file.filename}`;
+      log("DEBUG", "Request body parsed", {
+        title,
+        cost,
+        fundType,
+        userId,
+        fileName: req.file.originalname,
+      });
+
+      // Wrap the stream upload in a Promise to use async/await
+      const uploadPromise = new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "case-reports",
+            tags: ["case-report", userId],
+          },
+          (error, result) => {
+            if (error || !result) {
+              return reject(error || new Error("Cloudinary upload failed"));
+            }
+            resolve(result);
+          }
+        );
+        streamifier.createReadStream(req.file!.buffer).pipe(uploadStream);
+      });
+
+      const result = await uploadPromise;
+      if (!result || typeof result === "string") {
+        // Type guard
+        log("ERROR", "Cloudinary upload returned unexpected result", {
+          result,
+        });
+        res.status(500).json({
+          success: false,
+          message:
+            "Failed to upload photo to Cloudinary due to an internal error.",
+        });
+        return;
+      }
+
+      log("DEBUG", "Photo uploaded to Cloudinary", {
+        secureUrl: (result as { secure_url: string }).secure_url,
+        publicId: (result as { public_id: string }).public_id,
+      });
+
+      const photoUrl = (result as { secure_url: string }).secure_url;
 
       const caseReport = new CaseReport({
         title,
@@ -63,10 +112,11 @@ router.post(
         cost: parseFloat(cost),
         fundType,
         photoUrl,
-        uploadedBy: userId,
+        HospitalId: userId,
       });
 
       await caseReport.save();
+      log("DEBUG", "Case report saved to DB", { id: caseReport._id });
 
       res.status(201).json({
         success: true,
@@ -85,10 +135,10 @@ router.post(
         },
       });
     } catch (error) {
-      if (req.file) fs.unlinkSync(req.file.path);
+      log("ERROR", "Unhandled error in /upload", error);
       res.status(500).json({
         success: false,
-        message: "Server error uploading case report",
+        message: "Server error processing request",
       });
     }
   }

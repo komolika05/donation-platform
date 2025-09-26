@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import paypal from "paypal-rest-sdk";
-import logger from "./logger";
+import log from "./logger";
 
 // Initialize Stripe
 const stripe = new Stripe(process.env["STRIPE_SECRET_KEY"]!, {
@@ -37,7 +37,7 @@ export const createStripePaymentIntent = async (
   metadata: Record<string, string>
 ): Promise<PaymentIntent> => {
   try {
-    logger.info("Creating Stripe payment intent", {
+    log("INFO", "Creating Stripe payment intent", {
       amount,
       currency,
       metadata,
@@ -52,7 +52,7 @@ export const createStripePaymentIntent = async (
       },
     });
 
-    logger.info("Stripe payment intent created successfully", {
+    log("INFO", "Stripe payment intent created successfully", {
       paymentIntentId: paymentIntent.id,
       amount,
       currency,
@@ -66,7 +66,7 @@ export const createStripePaymentIntent = async (
       clientSecret: paymentIntent.client_secret ?? undefined,
     };
   } catch (error) {
-    logger.error("Error creating Stripe payment intent:", error);
+    log("ERROR", "Error creating Stripe payment intent:", error);
     throw new Error("Failed to create payment intent");
   }
 };
@@ -75,11 +75,11 @@ export const confirmStripePayment = async (
   paymentIntentId: string
 ): Promise<PaymentIntent> => {
   try {
-    logger.info("Confirming Stripe payment", { paymentIntentId });
+    log("INFO", "Confirming Stripe payment", { paymentIntentId });
 
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
-    logger.info("Stripe payment confirmed", {
+    log("INFO", "Stripe payment confirmed", {
       paymentIntentId,
       status: paymentIntent.status,
     });
@@ -91,7 +91,7 @@ export const confirmStripePayment = async (
       status: paymentIntent.status,
     };
   } catch (error) {
-    logger.error("Error confirming Stripe payment:", error);
+    log("ERROR", "Error confirming Stripe payment:", error);
     throw new Error("Failed to confirm payment");
   }
 };
@@ -105,7 +105,7 @@ export const createPayPalPayment = async (
   description: string
 ): Promise<PayPalPayment> => {
   return new Promise((resolve, reject) => {
-    logger.info("Creating PayPal payment", { amount, currency, description });
+    log("INFO", "Creating PayPal payment", { amount, currency, description });
 
     const paymentData = {
       intent: "sale",
@@ -140,10 +140,10 @@ export const createPayPalPayment = async (
 
     paypal.payment.create(paymentData, (error: any, payment: any) => {
       if (error) {
-        logger.error("Error creating PayPal payment:", error);
+        log("ERROR", "Error creating PayPal payment:", error);
         reject(new Error("Failed to create PayPal payment"));
       } else {
-        logger.info("PayPal payment created successfully", {
+        log("INFO", "PayPal payment created successfully", {
           paymentId: payment.id,
           amount,
           currency,
@@ -170,7 +170,7 @@ export const executePayPalPayment = async (
   payerId: string
 ): Promise<PayPalPayment> => {
   return new Promise((resolve, reject) => {
-    logger.info("Executing PayPal payment", { paymentId, payerId });
+    log("INFO", "Executing PayPal payment", { paymentId, payerId });
 
     const executePaymentJson = {
       payer_id: payerId,
@@ -181,10 +181,10 @@ export const executePayPalPayment = async (
       executePaymentJson,
       (error: any, payment: any) => {
         if (error) {
-          logger.error("Error executing PayPal payment:", error);
+          log("ERROR", "Error executing PayPal payment:", error);
           reject(new Error("Failed to execute PayPal payment"));
         } else {
-          logger.info("PayPal payment executed successfully", {
+          log("INFO", "PayPal payment executed successfully", {
             paymentId,
             status: payment.state,
           });
@@ -213,7 +213,7 @@ export const convertCurrency = async (
   try {
     if (fromCurrency === toCurrency) return amount;
 
-    logger.info("Converting currency", { amount, fromCurrency, toCurrency });
+    log("INFO", "Converting currency", { amount, fromCurrency, toCurrency });
 
     // For demo purposes, using fixed rates. In production, use a real currency API
     const exchangeRates: Record<string, Record<string, number>> = {
@@ -229,7 +229,7 @@ export const convertCurrency = async (
     }
 
     const convertedAmount = amount * rate;
-    logger.info("Currency converted successfully", {
+    log("INFO", "Currency converted successfully", {
       originalAmount: amount,
       convertedAmount,
       rate,
@@ -237,7 +237,7 @@ export const convertCurrency = async (
 
     return Math.round(convertedAmount * 100) / 100; // Round to 2 decimal places
   } catch (error) {
-    logger.error("Error converting currency:", error);
+    log("ERROR", "Error converting currency:", error);
     throw new Error("Failed to convert currency");
   }
 };

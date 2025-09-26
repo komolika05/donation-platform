@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import fs from "fs";
 import path from "path";
-import logger from "./logger";
+import log from "./logger";
 import type { IUser, IReceipt } from "../types";
 
 // Create email transporter
@@ -23,7 +23,7 @@ export const sendReceiptEmail = async (
   pdfPath: string
 ): Promise<void> => {
   try {
-    logger.info("Sending receipt email", {
+    log("INFO", "Sending receipt email", {
       userId: user._id,
       email: user.email,
       receiptNumber: receipt.receiptNumber,
@@ -34,7 +34,7 @@ export const sendReceiptEmail = async (
 
     // Verify transporter configuration
     await transporter.verify();
-    logger.info("Email transporter verified successfully");
+    log("INFO", "Email transporter verified successfully");
 
     // Read PDF file
     const pdfBuffer = fs.readFileSync(path.join(__dirname, "../..", pdfPath));
@@ -61,14 +61,14 @@ export const sendReceiptEmail = async (
 
     const info = await transporter.sendMail(mailOptions);
 
-    logger.info("Receipt email sent successfully", {
+    log("INFO", "Receipt email sent successfully", {
       userId: user._id,
       email: user.email,
       messageId: info.messageId,
       receiptNumber: receipt.receiptNumber,
     });
   } catch (error) {
-    logger.error("Error sending receipt email:", {
+    log("ERROR", "Error sending receipt email:", {
       error,
       userId: user._id,
       email: user.email,
@@ -206,7 +206,7 @@ const generateReceiptEmailHTML = (user: IUser, receipt: IReceipt): string => {
 
 export const sendWelcomeEmail = async (user: IUser): Promise<void> => {
   try {
-    logger.info("Sending welcome email", {
+    log("INFO", "Sending welcome email", {
       userId: user._id,
       email: user.email,
     });
@@ -229,13 +229,13 @@ export const sendWelcomeEmail = async (user: IUser): Promise<void> => {
 
     const info = await transporter.sendMail(mailOptions);
 
-    logger.info("Welcome email sent successfully", {
+    log("INFO", "Welcome email sent successfully", {
       userId: user._id,
       email: user.email,
       messageId: info.messageId,
     });
   } catch (error) {
-    logger.error("Error sending welcome email:", {
+    log("ERROR", "Error sending welcome email:", {
       error,
       userId: user._id,
       email: user.email,

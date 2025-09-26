@@ -6,10 +6,10 @@ import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
 import path from "path";
+import { v2 as cloudinary } from "cloudinary";
 
 // Import utilities
 import connectDB from "./config/database";
-import logger from "./utils/logger";
 import { scheduleAnnualReceiptGeneration } from "./utils/cronJobs";
 
 // Import routes
@@ -19,12 +19,20 @@ import reportRoutes from "./routes/reports";
 import userRoutes from "./routes/users";
 import adminRoutes from "./routes/admin";
 import receiptRoutes from "./routes/receipts";
+import log from "./utils/logger";
 
 const app = express();
 const PORT = process.env["PORT"];
 
 // Connect to database
 connectDB();
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env["CLOUDINARY_CLOUD_NAME"] || "",
+  api_key: process.env["CLOUDINARY_API_KEY"] || "",
+  api_secret: process.env["CLOUDINARY_SECRET_KEY"] || "",
+});
 
 // Schedule cron jobs
 scheduleAnnualReceiptGeneration();
@@ -37,7 +45,7 @@ app.use(
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https:"],
+        imgSrc: ["'self'", "data:", "https://res.cloudinary.com"], // 👈 Added Cloudinary's domain
       },
     },
   })
@@ -70,12 +78,9 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 // Compression middleware
 app.use(compression());
 
-// Static files
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
-
 // Request logging middleware
 app.use((req, _unused, next) => {
-  logger.info("Incoming request", {
+  log("INFO", "Incoming request", {
     method: req.method,
     url: req.url,
     ip: req.ip,
@@ -95,7 +100,7 @@ app.get("/", (_req, res) => {
 
 // Health check endpoint
 app.get("/health", (_unused, res) => {
-  logger.info("Health check requested");
+  log("INFO", "Health check requested");
   res.status(200).json({
     status: "OK",
     timestamp: new Date().toISOString(),
@@ -114,7 +119,7 @@ app.use("/receipts", receiptRoutes);
 
 // 404 handler
 app.use("*", (req, res) => {
-  logger.warn("Route not found", { url: req.originalUrl, method: req.method });
+  log("ERROR", "Route not found", { url: req.originalUrl, method: req.method });
   res.status(404).json({
     success: false,
     message: "Route not found",
@@ -123,7 +128,7 @@ app.use("*", (req, res) => {
 
 // Global error handler
 app.use((err: any, req: express.Request, res: express.Response) => {
-  logger.error("Unhandled error:", {
+  log("ERROR", "Unhandled error:", {
     error: err.message,
     stack: err.stack,
     url: req.url,
@@ -143,7 +148,7 @@ app.use((err: any, req: express.Request, res: express.Response) => {
 
 // Start server
 app.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`, {
+  log("INFO", `Server running on port ${PORT}`, {
     environment: process.env["NODE_ENV"] || "development",
     port: PORT,
   });
@@ -151,12 +156,12 @@ app.listen(PORT, () => {
 
 // Graceful shutdown
 process.on("SIGTERM", () => {
-  logger.info("SIGTERM received, shutting down gracefully");
+  log("INFO", "SIGTERM received, shutting down gracefully");
   process.exit(0);
 });
 
 process.on("SIGINT", () => {
-  logger.info("SIGINT received, shutting down gracefully");
+  log("INFO", "SIGINT received, shutting down gracefully");
   process.exit(0);
 });
 

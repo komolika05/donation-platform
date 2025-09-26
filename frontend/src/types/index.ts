@@ -5,6 +5,7 @@ export interface User {
   address?: string;
   country?: string;
   role: "donor" | "hospital-admin" | "super-admin";
+  hospitalName?: string;
   isEmailVerified: boolean;
   createdAt: string;
 }
@@ -38,6 +39,7 @@ export interface CaseReport {
   status: "pending" | "approved" | "rejected" | "assigned";
   donor?: string | User;
   createdAt: string;
+  HospitalId: string;
 }
 
 export interface Receipt {
@@ -129,4 +131,36 @@ export interface DashboardStats {
   activeCases: number;
   completedCases: number;
   recentDonations: Donation[];
+}
+
+export interface Hospital {
+  _id: string;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  contactEmail: string;
+  contactPhone: string;
+  adminId: string;
+  adminName: string;
+  status: "active" | "pending" | "suspended";
+  totalCases: number;
+  totalDonationsReceived: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SuperAdminStats {
+  totalHospitals: number;
+  activeHospitals: number;
+  pendingHospitals: number;
+  totalCases: number;
+  pendingCaseReports: number;
+  approvedCases: number;
+  rejectedCases: number;
+  totalDonations: number;
+  totalDonationAmount: number;
+  recentCaseReports: CaseReport[];
+  recentHospitals: Hospital[];
 }

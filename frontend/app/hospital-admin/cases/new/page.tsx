@@ -20,22 +20,33 @@ const schema = yup.object({
   title: yup
     .string()
     .required("Title is required")
-    .min(5, "Title must be at least 5 characters"),
+    .min(5, "Title must be at least 5 characters")
+    .max(200, "Title cannot exceed 200 characters"),
+
   description: yup
     .string()
     .required("Description is required")
-    .min(20, "Description must be at least 20 characters"),
+    .max(2000, "Description cannot exceed 2000 characters"),
+
   cost: yup
     .number()
+    .typeError("Cost is required")
     .required("Cost is required")
-    .min(1, "Cost must be greater than 0"),
+    .min(1, "Cost must be at least 1")
+    .max(100000, "Cost cannot exceed 100,000"),
+
   currency: yup.string().oneOf(["USD", "CAD"]).required("Currency is required"),
+
+  fundType: yup
+    .string()
+    .oneOf(["sponsorship", "20kids20"])
+    .required("Fund type is required"),
 });
 
 type CaseFormData = yup.InferType<typeof schema>;
 
 export default function NewCasePage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -49,6 +60,7 @@ export default function NewCasePage() {
     resolver: yupResolver(schema),
     defaultValues: {
       currency: "USD",
+      fundType: "sponsorship",
     },
   });
 
@@ -75,19 +87,37 @@ export default function NewCasePage() {
       return;
     }
 
+    if (!selectedImage) {
+      toast.error("An image is required to create a case.");
+      return;
+    }
     try {
       setIsLoading(true);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("description", data.description);
+      formData.append("cost", data.cost.toString());
+      formData.append("fundType", data.fundType);
+      formData.append("photo", selectedImage);
 
-      // In a real app, you would upload the image and create the case
-      console.log("Creating case:", {
-        ...data,
-        hospitalId: user.id,
-        hospitalName: "City General Hospital", // This would come from user data
-        image: selectedImage,
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/reports/upload`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = result.message || "Failed to create case";
+        throw new Error(errorMessage);
+      }
 
       toast.success("Case created successfully!");
       router.push("/hospital-admin");
@@ -155,8 +185,8 @@ export default function NewCasePage() {
                 )}
               </div>
 
-              {/* Cost and Currency */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Cost, Currency, Fund Type */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Input
                   label="Required Amount"
                   type="number"
@@ -166,6 +196,7 @@ export default function NewCasePage() {
                   error={errors.cost?.message}
                   {...register("cost", { valueAsNumber: true })}
                 />
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Currency
@@ -183,12 +214,30 @@ export default function NewCasePage() {
                     </p>
                   )}
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Fund Type
+                  </label>
+                  <select
+                    {...register("fundType")}
+                    className="w-full h-10 px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="sponsorship">Sponsorship</option>
+                    <option value="20kids20">20kids20</option>
+                  </select>
+                  {errors.fundType && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.fundType.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Image Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Case Image (Optional)
+                  Case Image
                 </label>
 
                 {!imagePreview ? (
@@ -238,7 +287,7 @@ export default function NewCasePage() {
                   <div>
                     <span className="text-gray-600">Hospital:</span>
                     <span className="ml-2 font-medium">
-                      City General Hospital
+                      {user.hospitalName || "N/A"}
                     </span>
                   </div>
                   <div>
