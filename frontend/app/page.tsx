@@ -10,59 +10,76 @@ export default function HomePage() {
       <Navbar />
 
       <section className="hero-light py-24 px-4">
-        <div className="container mx-auto text-center">
-          <h1 className="text-6xl font-bold mb-6 text-balance text-gray-900">
-            Transforming Healthcare Through
-            <span className="text-transparent bg-gradient-to-r from-blue-500 to-blue-800 bg-clip-text">
-              {" "}
-              Transparent Donations
-            </span>
-          </h1>
-          <p className="text-xl text-gray-700 mb-12 max-w-4xl mx-auto text-balance">
-            JKVIS connects compassionate donors with critical healthcare needs
-            worldwide, ensuring every contribution creates measurable impact in
-            saving lives and improving healthcare access.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
-            <Link href="/donate">
-              <Button
-                size="lg"
-                className="bg-blue-600 text-white hover:bg-blue-700 px-8 py-4 text-lg font-semibold"
-              >
-                Start Donating
-              </Button>
-            </Link>
-            <Link href="/cases">
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-4 text-lg font-semibold bg-transparent"
-              >
-                View Active Cases
-              </Button>
-            </Link>
+        <div className="container mx-auto">
+          <div className="grid lg:grid-cols-2 gap-16 items-center mb-16">
+            <div className="text-center lg:text-left">
+              <h1 className="text-6xl font-bold mb-6 text-balance text-gray-900">
+                Transforming Healthcare Through
+                <span className="text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
+                  {" "}
+                  Transparent Donations
+                </span>
+              </h1>
+              <p className="text-xl text-gray-700 mb-12 max-w-2xl text-balance">
+                JKVIS connects compassionate donors with critical healthcare
+                needs worldwide, ensuring every contribution creates measurable
+                impact in saving lives and improving healthcare access.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start">
+                <Link href="/donate">
+                  <Button
+                    size="lg"
+                    className="bg-blue-600 text-white hover:bg-blue-700 px-8 py-4 text-lg font-semibold"
+                  >
+                    Start Donating
+                  </Button>
+                </Link>
+                <Link href="/cases">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-4 text-lg font-semibold bg-transparent"
+                  >
+                    View Active Cases
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <div className="relative">
+              <Image
+                src="/diverse-healthcare-workers-helping-patients-in-mod.jpg"
+                alt="Healthcare workers helping patients"
+                width={800}
+                height={600}
+                className="rounded-3xl shadow-2xl"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+            <div className="text-center">
+              <div className="text-4xl font-bold mb-2 text-gray-900">
+                $2.4M+
+              </div>
+              <div className="text-gray-600">Total Donated</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold mb-2 text-gray-900">
+                15,000+
+              </div>
+              <div className="text-gray-600">Lives Impacted</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold mb-2 text-gray-900">98%</div>
+              <div className="text-gray-600">Funds to Care</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold mb-2 text-gray-900">150+</div>
+              <div className="text-gray-600">Partner Hospitals</div>
+            </div>
           </div>
         </div>
       </section>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-9 max-w-4xl mx-auto py-8">
-        <div className="text-center">
-          <div className="text-4xl font-bold mb-2 text-gray-900">$2.4M+</div>
-          <div className="text-gray-600">Total Donated</div>
-        </div>
-        <div className="text-center">
-          <div className="text-4xl font-bold mb-2 text-gray-900">15,000+</div>
-          <div className="text-gray-600">Lives Impacted</div>
-        </div>
-        <div className="text-center">
-          <div className="text-4xl font-bold mb-2 text-gray-900">98%</div>
-          <div className="text-gray-600">Funds to Care</div>
-        </div>
-        <div className="text-center">
-          <div className="text-4xl font-bold mb-2 text-gray-900">150+</div>
-          <div className="text-gray-600">Partner Hospitals</div>
-        </div>
-      </div>
 
       <main className="container mx-auto px-4">
         <section className="py-24">
@@ -79,20 +96,14 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-3 gap-12">
             <Card className="p-8 text-center hover:shadow-xl transition-shadow duration-300">
-              <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <svg
-                  className="w-8 h-8 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                  />
-                </svg>
+              <div className="mb-6">
+                <Image
+                  src="/hands-holding-heart-with-medical-cross-symbol-repr.jpg"
+                  alt="Direct Impact"
+                  width={300}
+                  height={200}
+                  className="rounded-2xl mx-auto"
+                />
               </div>
               <h3 className="text-2xl font-semibold mb-4">Direct Impact</h3>
               <p className="text-gray-600 text-lg leading-relaxed">
@@ -103,20 +114,14 @@ export default function HomePage() {
             </Card>
 
             <Card className="p-8 text-center hover:shadow-xl transition-shadow duration-300">
-              <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <svg
-                  className="w-8 h-8 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+              <div className="mb-6">
+                <Image
+                  src="/medical-professionals-reviewing-patient-files-with.jpg"
+                  alt="Verified Cases"
+                  width={300}
+                  height={200}
+                  className="rounded-2xl mx-auto"
+                />
               </div>
               <h3 className="text-2xl font-semibold mb-4">Verified Cases</h3>
               <p className="text-gray-600 text-lg leading-relaxed">
@@ -127,20 +132,14 @@ export default function HomePage() {
             </Card>
 
             <Card className="p-8 text-center hover:shadow-xl transition-shadow duration-300">
-              <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <svg
-                  className="w-8 h-8 text-purple-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
+              <div className="mb-6">
+                <Image
+                  src="/transparent-dashboard-showing-donation-tracking-an.jpg"
+                  alt="Full Transparency"
+                  width={300}
+                  height={200}
+                  className="rounded-2xl mx-auto"
+                />
               </div>
               <h3 className="text-2xl font-semibold mb-4">Full Transparency</h3>
               <p className="text-gray-600 text-lg leading-relaxed">
@@ -166,6 +165,15 @@ export default function HomePage() {
 
             <div className="grid md:grid-cols-3 gap-12">
               <div className="text-center">
+                <div className="mb-6">
+                  <Image
+                    src="/person-browsing-medical-cases-on-tablet-showing-pa.jpg"
+                    alt="Browse Cases"
+                    width={350}
+                    height={250}
+                    className="rounded-2xl mx-auto"
+                  />
+                </div>
                 <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
                   <span className="text-2xl font-bold text-white">1</span>
                 </div>
@@ -178,6 +186,15 @@ export default function HomePage() {
               </div>
 
               <div className="text-center">
+                <div className="mb-6">
+                  <Image
+                    src="/secure-payment-interface-with-credit-card-and-digi.jpg"
+                    alt="Make Donation"
+                    width={350}
+                    height={250}
+                    className="rounded-2xl mx-auto"
+                  />
+                </div>
                 <div className="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                   <span className="text-2xl font-bold text-white">2</span>
                 </div>
@@ -190,6 +207,15 @@ export default function HomePage() {
               </div>
 
               <div className="text-center">
+                <div className="mb-6">
+                  <Image
+                    src="/mobile-app-showing-real-time-donation-impact-updat.jpg"
+                    alt="Track Impact"
+                    width={350}
+                    height={250}
+                    className="rounded-2xl mx-auto"
+                  />
+                </div>
                 <div className="w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
                   <span className="text-2xl font-bold text-white">3</span>
                 </div>
@@ -201,6 +227,66 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="py-24">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+              Success Stories
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Real stories of lives transformed through the generosity of our
+              donor community.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-12">
+            <Card className="p-8">
+              <div className="mb-6">
+                <Image
+                  src="/donation-guide-illustration-with-heart-and-medical.jpg"
+                  alt="Heart Surgery Success"
+                  width={500}
+                  height={300}
+                  className="rounded-2xl w-full object-cover"
+                />
+              </div>
+              <h3 className="text-2xl font-semibold mb-4">
+                Life-Saving Heart Surgery
+              </h3>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                8-year-old Maria received a critical heart surgery thanks to
+                donations from 47 generous donors. She's now back to playing
+                with her friends and attending school regularly.
+              </p>
+              <div className="text-sm text-gray-600">
+                <strong>Funded:</strong> $45,000 • <strong>Donors:</strong> 47 •{" "}
+                <strong>Recovery:</strong> Complete
+              </div>
+            </Card>
+
+            <Card className="p-8">
+              <div className="mb-6">
+                <Image
+                  src="/elderly-man-walking-with-physical-therapist-after-.jpg"
+                  alt="Knee Replacement Success"
+                  width={500}
+                  height={300}
+                  className="rounded-2xl w-full object-cover"
+                />
+              </div>
+              <h3 className="text-2xl font-semibold mb-4">Mobility Restored</h3>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                Robert, 68, can walk pain-free again after his knee replacement
+                surgery was funded through our platform. He's now volunteering
+                at his local community center.
+              </p>
+              <div className="text-sm text-gray-600">
+                <strong>Funded:</strong> $32,000 • <strong>Donors:</strong> 23 •{" "}
+                <strong>Recovery:</strong> Excellent
+              </div>
+            </Card>
           </div>
         </section>
 
@@ -329,7 +415,7 @@ export default function HomePage() {
 
         <section className="py-24">
           <div className="stats-light rounded-3xl p-16 text-center">
-            <h2 className="text-5xl font-bold mb-6 text-balance text-blue-700">
+            <h2 className="text-5xl font-bold mb-6 text-balance text-blue-900">
               Ready to Save Lives?
             </h2>
             <p className="text-xl text-blue-800 mb-12 max-w-3xl mx-auto text-balance">
