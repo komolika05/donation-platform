@@ -6,439 +6,269 @@ import Image from "next/image";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white">
       <Navbar />
 
-      <section className="hero-light py-24 px-4">
+      {/* Hero Section: Focused on the core mission of "giving sight" */}
+      <section className="bg-gray-50 py-24 px-4">
         <div className="container mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 items-center mb-16">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="text-center lg:text-left">
               <h1 className="text-6xl font-bold mb-6 text-balance text-gray-900">
-                Transforming Healthcare Through
-                <span className="text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
+                Giving the Gift of Sight Through
+                <span className="text-transparent bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text">
                   {" "}
-                  Transparent Donations
+                  Compassionate Donation
                 </span>
               </h1>
-              <p className="text-xl text-gray-700 mb-12 max-w-2xl text-balance">
-                JKVIS connects compassionate donors with critical healthcare
-                needs worldwide, ensuring every contribution creates measurable
-                impact in saving lives and improving healthcare access.
+              <p className="text-xl text-gray-700 mb-8 max-w-2xl text-balance">
+                JKVIS connects donors with individuals in need of
+                sight-restoring treatments, ensuring every contribution brings
+                light to someone's world.
               </p>
+              <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-600 mb-12">
+                "A wonderful wonderful thing to do, to give someone back their
+                vision."
+                <cite className="block not-italic font-semibold mt-2">
+                  - Jas Khangura
+                </cite>
+              </blockquote>
               <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start">
-                <Link href="/donate">
+                <Link href="/donations">
                   <Button
                     size="lg"
                     className="bg-blue-600 text-white hover:bg-blue-700 px-8 py-4 text-lg font-semibold"
                   >
-                    Start Donating
+                    Donate Now
                   </Button>
                 </Link>
-                <Link href="/cases">
+                <Link href="/stories">
                   <Button
                     variant="outline"
                     size="lg"
                     className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-4 text-lg font-semibold bg-transparent"
                   >
-                    View Active Cases
+                    See Our Impact
                   </Button>
                 </Link>
               </div>
             </div>
             <div className="relative">
+              {/* [Image of an elderly person's smiling eyes seeing clearly] */}
               <Image
                 src="/diverse-healthcare-workers-helping-patients-in-mod.jpg"
-                alt="Healthcare workers helping patients"
+                alt="An elderly patient smiling after successful eye surgery"
                 width={800}
                 height={600}
                 className="rounded-3xl shadow-2xl"
               />
             </div>
           </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="text-4xl font-bold mb-2 text-gray-900">
-                $2.4M+
-              </div>
-              <div className="text-gray-600">Total Donated</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold mb-2 text-gray-900">
-                15,000+
-              </div>
-              <div className="text-gray-600">Lives Impacted</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold mb-2 text-gray-900">98%</div>
-              <div className="text-gray-600">Funds to Care</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold mb-2 text-gray-900">150+</div>
-              <div className="text-gray-600">Partner Hospitals</div>
-            </div>
-          </div>
         </div>
       </section>
 
       <main className="container mx-auto px-4">
-        <section className="py-24">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Why Choose JKVIS?
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Our platform ensures your donations create maximum impact through
-              verified cases, transparent tracking, and direct healthcare
-              support.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-12">
-            <Card className="p-8 text-center hover:shadow-xl transition-shadow duration-300">
-              <div className="mb-6">
-                <Image
-                  src="/hands-holding-heart-with-medical-cross-symbol-repr.jpg"
-                  alt="Direct Impact"
-                  width={300}
-                  height={200}
-                  className="rounded-2xl mx-auto"
-                />
+        {/* Impact Stats Section: Tailored to vision-related metrics */}
+        <section className="py-20 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-5xl mx-auto">
+            <div>
+              <div className="text-5xl font-bold text-blue-600 mb-2">
+                10,000+
               </div>
-              <h3 className="text-2xl font-semibold mb-4">Direct Impact</h3>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                Your donations go directly to verified healthcare cases,
-                ensuring maximum impact for those in critical need of medical
-                assistance.
-              </p>
-            </Card>
-
-            <Card className="p-8 text-center hover:shadow-xl transition-shadow duration-300">
-              <div className="mb-6">
-                <Image
-                  src="/medical-professionals-reviewing-patient-files-with.jpg"
-                  alt="Verified Cases"
-                  width={300}
-                  height={200}
-                  className="rounded-2xl mx-auto"
-                />
+              <div className="text-lg text-gray-600">Sights Restored</div>
+            </div>
+            <div>
+              <div className="text-5xl font-bold text-blue-600 mb-2">
+                50,000+
               </div>
-              <h3 className="text-2xl font-semibold mb-4">Verified Cases</h3>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                All medical cases are thoroughly verified by healthcare
-                professionals and partner hospitals before being listed on our
-                platform.
-              </p>
-            </Card>
-
-            <Card className="p-8 text-center hover:shadow-xl transition-shadow duration-300">
-              <div className="mb-6">
-                <Image
-                  src="/transparent-dashboard-showing-donation-tracking-an.jpg"
-                  alt="Full Transparency"
-                  width={300}
-                  height={200}
-                  className="rounded-2xl mx-auto"
-                />
-              </div>
-              <h3 className="text-2xl font-semibold mb-4">Full Transparency</h3>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                Track your donations with detailed receipts, real-time updates,
-                and comprehensive reports on how your contribution makes a
-                difference.
-              </p>
-            </Card>
+              <div className="text-lg text-gray-600">Patients Screened</div>
+            </div>
+            <div>
+              <div className="text-5xl font-bold text-blue-600 mb-2">100%</div>
+              <div className="text-lg text-gray-600">Volunteer-Run</div>
+            </div>
+            <div>
+              <div className="text-5xl font-bold text-blue-600 mb-2">50+</div>
+              <div className="text-lg text-gray-600">Partner Eye Clinics</div>
+            </div>
           </div>
         </section>
 
+        {/* How It Works Section */}
         <section className="py-24 bg-gray-50 -mx-4 px-4">
           <div className="container mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold text-gray-900 mb-6">
-                How It Works
+                Our Path to Restoring Vision
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Our simple, transparent process ensures your donations reach
-                those who need them most.
+                A simple, transparent process to ensure your donation directly
+                funds life-changing eye care for those in need.
               </p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-12">
               <div className="text-center">
-                <div className="mb-6">
-                  <Image
-                    src="/person-browsing-medical-cases-on-tablet-showing-pa.jpg"
-                    alt="Browse Cases"
-                    width={350}
-                    height={250}
-                    className="rounded-2xl mx-auto"
-                  />
+                <div className="relative w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white">
+                  1
                 </div>
-                <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-2xl font-bold text-white">1</span>
-                </div>
-                <h3 className="text-2xl font-semibold mb-4">Browse Cases</h3>
+                <h3 className="text-2xl font-semibold mb-4">Find a Patient</h3>
                 <p className="text-gray-600 text-lg leading-relaxed">
-                  Explore verified medical cases from partner hospitals
-                  worldwide. Each case includes detailed medical information,
-                  funding goals, and patient stories.
+                  Browse verified profiles of individuals requiring urgent eye
+                  surgeries, from cataract removal to corneal transplants.
                 </p>
               </div>
-
               <div className="text-center">
-                <div className="mb-6">
-                  <Image
-                    src="/secure-payment-interface-with-credit-card-and-digi.jpg"
-                    alt="Make Donation"
-                    width={350}
-                    height={250}
-                    className="rounded-2xl mx-auto"
-                  />
+                <div className="relative w-20 h-20 bg-teal-500 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white">
+                  2
                 </div>
-                <div className="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-2xl font-bold text-white">2</span>
-                </div>
-                <h3 className="text-2xl font-semibold mb-4">Make Donation</h3>
+                <h3 className="text-2xl font-semibold mb-4">
+                  Give the Gift of Sight
+                </h3>
                 <p className="text-gray-600 text-lg leading-relaxed">
-                  Choose your donation amount and payment method. Our secure
-                  platform supports multiple payment options including credit
-                  cards and digital wallets.
+                  Make a secure donation. As a non-profit society, we ensure
+                  every dollar goes directly towards patient care and treatment.
                 </p>
               </div>
-
               <div className="text-center">
-                <div className="mb-6">
-                  <Image
-                    src="/mobile-app-showing-real-time-donation-impact-updat.jpg"
-                    alt="Track Impact"
-                    width={350}
-                    height={250}
-                    className="rounded-2xl mx-auto"
-                  />
+                <div className="relative w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white">
+                  3
                 </div>
-                <div className="w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-2xl font-bold text-white">3</span>
-                </div>
-                <h3 className="text-2xl font-semibold mb-4">Track Impact</h3>
+                <h3 className="text-2xl font-semibold mb-4">
+                  Witness the Miracle
+                </h3>
                 <p className="text-gray-600 text-lg leading-relaxed">
-                  Receive real-time updates on your donation's impact, including
-                  treatment progress, recovery updates, and thank you messages
-                  from patients.
+                  Receive updates on the patient's journey and see the profound
+                  impact of your generosity as they regain their vision.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
+        {/* Success Stories Section: More emotive and specific */}
         <section className="py-24">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Success Stories
+              Stories of Hope
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Real stories of lives transformed through the generosity of our
-              donor community.
+              Real lives transformed by the clarity of vision, made possible by
+              donors like you.
             </p>
           </div>
-
           <div className="grid md:grid-cols-2 gap-12">
-            <Card className="p-8">
-              <div className="mb-6">
-                <Image
-                  src="/donation-guide-illustration-with-heart-and-medical.jpg"
-                  alt="Heart Surgery Success"
-                  width={500}
-                  height={300}
-                  className="rounded-2xl w-full object-cover"
-                />
-              </div>
+            <Card className="p-8 flex flex-col">
+              {/* [Image of a young girl reading a book after eye surgery] */}
+              <Image
+                src="/child-reading-post-surgery.webp"
+                alt="A young girl reading a book clearly for the first time"
+                width={500}
+                height={300}
+                className="rounded-2xl w-full object-cover mb-6"
+              />
               <h3 className="text-2xl font-semibold mb-4">
-                Life-Saving Heart Surgery
+                A Child's First Sunrise
               </h3>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                8-year-old Maria received a critical heart surgery thanks to
-                donations from 47 generous donors. She's now back to playing
-                with her friends and attending school regularly.
+              <p className="text-gray-700 leading-relaxed mb-4 flex-grow">
+                Seven-year-old Priya, born with congenital cataracts, saw the
+                world clearly for the first time. Thanks to our donors, her
+                future is now as bright as her vision.
               </p>
-              <div className="text-sm text-gray-600">
-                <strong>Funded:</strong> $45,000 • <strong>Donors:</strong> 47 •{" "}
-                <strong>Recovery:</strong> Complete
+              <div className="text-sm text-gray-600 mt-auto pt-4 border-t">
+                <strong>Surgery:</strong> Bilateral Cataract Removal •{" "}
+                <strong>Donors:</strong> 82
               </div>
             </Card>
-
-            <Card className="p-8">
-              <div className="mb-6">
-                <Image
-                  src="/elderly-man-walking-with-physical-therapist-after-.jpg"
-                  alt="Knee Replacement Success"
-                  width={500}
-                  height={300}
-                  className="rounded-2xl w-full object-cover"
-                />
-              </div>
-              <h3 className="text-2xl font-semibold mb-4">Mobility Restored</h3>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                Robert, 68, can walk pain-free again after his knee replacement
-                surgery was funded through our platform. He's now volunteering
-                at his local community center.
+            <Card className="p-8 flex flex-col">
+              {/* [Image of an elderly man happily looking at his family] */}
+              <Image
+                src="/elderly-man-walking-with-physical-therapist-after-.jpg"
+                alt="An elderly man seeing his grandchildren clearly"
+                width={500}
+                height={300}
+                className="rounded-2xl w-full object-cover mb-6"
+              />
+              <h3 className="text-2xl font-semibold mb-4">
+                A Grandfather's Renewed Vision
+              </h3>
+              <p className="text-gray-700 leading-relaxed mb-4 flex-grow">
+                After years of fading sight due to glaucoma, Mr. Singh can now
+                see his grandchildren's faces. A simple, funded procedure
+                restored not just his sight, but his connection to family.
               </p>
-              <div className="text-sm text-gray-600">
-                <strong>Funded:</strong> $32,000 • <strong>Donors:</strong> 23 •{" "}
-                <strong>Recovery:</strong> Excellent
+              <div className="text-sm text-gray-600 mt-auto pt-4 border-t">
+                <strong>Surgery:</strong> Corneal Transplant •{" "}
+                <strong>Donors:</strong> 45
               </div>
             </Card>
           </div>
         </section>
 
+        {/* About Us/Mission Section */}
         <section className="py-24">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Stories of Impact
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Hear from donors and patients whose lives have been transformed
-              through our platform.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="p-8">
-              <div className="flex items-center mb-6">
-                <Image
-                  src="/professional-female-doctor-smiling-in-white-coat.jpg"
-                  alt="Dr. Sarah Johnson"
-                  width={60}
-                  height={60}
-                  className="rounded-full mr-4"
-                />
-                <div>
-                  <h4 className="font-semibold text-lg">Dr. Sarah Johnson</h4>
-                  <p className="text-gray-600">Cardiac Surgeon</p>
-                </div>
-              </div>
-              <p className="text-gray-700 leading-relaxed">
-                "JKVIS has revolutionized how we connect with donors. The
-                transparency and efficiency of the platform has helped us save
-                countless lives by securing funding for critical surgeries."
-              </p>
-            </Card>
-
-            <Card className="p-8">
-              <div className="flex items-center mb-6">
-                <Image
-                  src="/professional-asian-male-in-business-suit-smiling.jpg"
-                  alt="Michael Chen"
-                  width={60}
-                  height={60}
-                  className="rounded-full mr-4"
-                />
-                <div>
-                  <h4 className="font-semibold text-lg">Michael Chen</h4>
-                  <p className="text-gray-600">Regular Donor</p>
-                </div>
-              </div>
-              <p className="text-gray-700 leading-relaxed">
-                "I've donated to several cases through JKVIS and love receiving
-                updates on the patients' recovery. It's incredible to see the
-                direct impact of my contributions."
-              </p>
-            </Card>
-
-            <Card className="p-8">
-              <div className="flex items-center mb-6">
-                <Image
-                  src="/professional-african-female-doctor-in-medical-sett.jpg"
-                  alt="Dr. Amara Okafor"
-                  width={60}
-                  height={60}
-                  className="rounded-full mr-4"
-                />
-                <div>
-                  <h4 className="font-semibold text-lg">Dr. Amara Okafor</h4>
-                  <p className="text-gray-600">Pediatric Specialist</p>
-                </div>
-              </div>
-              <p className="text-gray-700 leading-relaxed">
-                "The verification process gives me confidence that donations
-                reach legitimate cases. As a healthcare provider, I appreciate
-                the platform's commitment to transparency."
-              </p>
-            </Card>
-          </div>
-        </section>
-
-        <section className="py-24 bg-gray-50 -mx-4 px-4">
-          <div className="container mx-auto">
-            <div className="text-center mb-16">
+          <div className="grid lg:grid-cols-5 gap-16 items-center">
+            <div className="lg:col-span-2">
+              {/* [Image of the Jas Khangura Vision International team] */}
+              <Image
+                src="/jkbs-images.jpg"
+                alt="JKVIS team with happy patients"
+                width={600}
+                height={700}
+                className="rounded-3xl shadow-xl object-cover"
+              />
+            </div>
+            <div className="lg:col-span-3">
               <h2 className="text-4xl font-bold text-gray-900 mb-6">
-                Trusted by Healthcare Leaders
+                Our Mission: A World Where Everyone Can See
               </h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                We partner with leading hospitals and healthcare organizations
-                worldwide to ensure the highest standards of care and
-                transparency.
+              <p className="text-lg text-gray-700 leading-relaxed mb-6">
+                Jas Khangura Vision International is a Canadian non-profit
+                charitable society based in British Columbia. We are dedicated
+                to promoting eye health awareness and providing free eye care,
+                treatment, and operations to those who are unable to afford it.
               </p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center opacity-60">
-              <div className="text-center">
-                <div className="bg-white p-6 rounded-lg shadow-sm">
-                  <div className="text-2xl font-bold text-gray-800">
-                    Mayo Clinic
-                  </div>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="bg-white p-6 rounded-lg shadow-sm">
-                  <div className="text-2xl font-bold text-gray-800">
-                    Johns Hopkins
-                  </div>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="bg-white p-6 rounded-lg shadow-sm">
-                  <div className="text-2xl font-bold text-gray-800">
-                    Cleveland Clinic
-                  </div>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="bg-white p-6 rounded-lg shadow-sm">
-                  <div className="text-2xl font-bold text-gray-800">
-                    Mass General
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-24">
-          <div className="stats-light rounded-3xl p-16 text-center">
-            <h2 className="text-5xl font-bold mb-6 text-balance text-blue-900">
-              Ready to Save Lives?
-            </h2>
-            <p className="text-xl text-blue-800 mb-12 max-w-3xl mx-auto text-balance">
-              Join thousands of compassionate donors who are making a real
-              difference in healthcare worldwide. Every donation, no matter the
-              size, has the power to transform lives.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link href="/register">
-                <Button
-                  size="lg"
-                  className="bg-blue-600 text-white hover:bg-blue-700 px-8 py-4 text-lg font-semibold"
-                >
-                  Start Your Impact Journey
+              <p className="text-lg text-gray-700 leading-relaxed mb-8">
+                Our society is controlled by a Board of Trustees, with a strict
+                mandate that ensures 100% of public donations go directly to
+                patient care. No trustee, past or present, receives any monetary
+                benefit from the society.
+              </p>
+              <Link href="/about-us">
+                <Button size="lg" variant="outline">
+                  Learn More About Our Work
                 </Button>
               </Link>
-              <Link href="/about">
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA Section */}
+        <section className="py-24">
+          <div className="bg-blue-600 rounded-3xl p-16 text-center text-white">
+            <h2 className="text-5xl font-bold mb-6 text-balance">
+              Ready to Bring Light to Someone's World?
+            </h2>
+            <p className="text-xl opacity-90 mb-12 max-w-3xl mx-auto text-balance">
+              "It is a very beautiful thing to see a person smiling. And even
+              more beautiful is, knowing that you are the reason behind it."
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <Link href="/donations">
+                <Button
+                  size="lg"
+                  className="bg-white text-blue-600 hover:bg-gray-200 px-8 py-4 text-lg font-semibold"
+                >
+                  Give the Gift of Sight
+                </Button>
+              </Link>
+              <Link href="/how-to-help">
                 <Button
                   variant="outline"
                   size="lg"
-                  className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-4 text-lg font-semibold bg-transparent"
+                  className="border-white bg-blue-600 text-white hover:bg-white hover:text-blue-600 px-8 py-4 text-lg font-semibold"
                 >
-                  Learn More About Us
+                  More Ways to Help
                 </Button>
               </Link>
             </div>
