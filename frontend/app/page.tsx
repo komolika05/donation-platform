@@ -87,7 +87,7 @@ export default function HomePage() {
                 className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start"
                 variants={fadeIn}
               >
-                <Link href="/donations">
+                <Link href="/donate">
                   <Button
                     size="lg"
                     className="bg-blue-600 text-white hover:bg-blue-700 transition-all transform hover:scale-105 px-8 py-4 text-lg font-semibold"
@@ -95,13 +95,13 @@ export default function HomePage() {
                     Donate Now
                   </Button>
                 </Link>
-                <Link href="/stories">
+                <Link href="/cases">
                   <Button
                     variant="outline"
                     size="lg"
                     className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all transform hover:scale-105 px-8 py-4 text-lg font-semibold bg-transparent"
                   >
-                    See Our Impact
+                    See Our Cases
                   </Button>
                 </Link>
               </motion.div>
@@ -291,7 +291,7 @@ export default function HomePage() {
                 benefit from the society.
               </motion.p>
               <motion.div variants={fadeIn}>
-                <Link href="/about-us">
+                <Link href="/about">
                   <Button size="lg" variant="outline">
                     Learn More About Our Work
                   </Button>
@@ -321,7 +321,7 @@ export default function HomePage() {
               more beautiful is, knowing that you are the reason behind it."
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link href="/donations">
+              <Link href="/donate">
                 <Button
                   size="lg"
                   className="bg-white text-blue-600 hover:bg-gray-200 px-8 py-4 text-lg font-semibold transition-transform transform hover:scale-105"
@@ -329,7 +329,7 @@ export default function HomePage() {
                   Give the Gift of Sight
                 </Button>
               </Link>
-              <Link href="/how-to-help">
+              <Link href="/resources">
                 <Button
                   variant="outline"
                   size="lg"
