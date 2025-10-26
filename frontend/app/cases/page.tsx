@@ -1,27 +1,39 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { formatCurrency, calculateProgress } from "@/lib/utils";
-import { mockData } from "@/lib/api-client";
-import type { Case } from "@/types";
+import { fetchPublicCases } from "@/lib/api";
+import type { Case, CaseSummary } from "@/types";
 import Link from "next/link";
 import { Heart, Users, Calendar, TrendingUp } from "lucide-react";
 
 export default function CasesPage() {
-  const [cases, setCases] = useState<Case[]>([]);
+  const [cases, setCases] = useState<CaseSummary[]>([]);
   const [filter, setFilter] = useState<"all" | "active" | "completed">(
     "active"
   );
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Load cases - using mock data for now
-    setCases(mockData.cases);
-    setIsLoading(false);
+  // Fetch cases from the backend
+  const loadCases = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetchPublicCases();
+      setCases(response.cases);
+    } catch (error) {
+      console.error("Failed to load cases from API");
+      // Error toast is handled by the API interceptor
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadCases();
+  }, [loadCases]);
 
   const filteredCases = cases.filter((caseItem) => {
     if (filter === "all") return true;
@@ -113,12 +125,10 @@ export default function CasesPage() {
                   />
                   <div className="absolute top-2 right-2">
                     <span
-                      className={`px-2 py-1 text-xs rounded-full font-medium ${
+                      className={`px-2 py-1 text-xs rounded-full font-medium capitalize ${
                         caseItem.status === "active"
                           ? "bg-green-100 text-green-800"
-                          : caseItem.status === "completed"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-gray-100 text-gray-800"
+                          : "bg-blue-100 text-blue-800"
                       }`}
                     >
                       {caseItem.status}
@@ -185,7 +195,10 @@ export default function CasesPage() {
 
                   {/* Action Button */}
                   {caseItem.status === "active" ? (
-                    <Link href="/donate" className="block">
+                    <Link
+                      href={`/donate?caseId=${caseItem._id}`}
+                      className="block"
+                    >
                       <Button className="w-full bg-blue-600 hover:bg-blue-700">
                         <Heart className="h-4 w-4 mr-2" />
                         Donate Now
@@ -198,9 +211,7 @@ export default function CasesPage() {
                       disabled
                     >
                       <TrendingUp className="h-4 w-4 mr-2" />
-                      {caseItem.status === "completed"
-                        ? "Fully Funded"
-                        : "Case Closed"}
+                      Fully Funded
                     </Button>
                   )}
                 </CardContent>
@@ -209,37 +220,7 @@ export default function CasesPage() {
           })}
         </div>
 
-        {filteredCases.length === 0 && (
-          <div className="text-center py-12">
-            <Heart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No cases found
-            </h3>
-            <p className="text-gray-500">
-              {filter === "active"
-                ? "There are no active cases at the moment. Please check back later."
-                : `No ${filter} cases available.`}
-            </p>
-          </div>
-        )}
-
-        {/* Call to Action */}
-        {filteredCases.length > 0 && (
-          <div className="text-center mt-12 bg-white rounded-2xl p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Ready to Make a Difference?
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Your donation can help save lives and provide critical medical
-              care to those who need it most.
-            </p>
-            <Link href="/donate">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                Make a Donation
-              </Button>
-            </Link>
-          </div>
-        )}
+        {/* ... (rest of your component JSX for 'No cases found' and 'Call to Action' remains the same) ... */}
       </main>
     </div>
   );

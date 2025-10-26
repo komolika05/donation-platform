@@ -7,6 +7,7 @@ import { body, validationResult } from "express-validator";
 import streamifier from "streamifier";
 import { v2 as cloudinary } from "cloudinary";
 import log from "../utils/logger";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
@@ -306,6 +307,100 @@ router.get(
     }
   }
 );
+//--Case reports for public view--//
+
+router.get("/public", async (req, res: Response): Promise<void> => {
+  log("CASE-REPORT", "Fetching active cases 1");
+  try {
+    log("CASE-REPORT", "Fetching active cases 2");
+    const page = parseInt(req.query["page"] as string) || 1;
+    const limit = parseInt(req.query["limit"] as string) || 9; // Default to 9 for a 3-column grid
+    const skip = (page - 1) * limit;
+
+    const pipeline: mongoose.PipelineStage[] = [
+      { $match: { status: "approved" } },
+
+      // Stage 2: Join with donations to calculate raised amount and donor count
+      {
+        $lookup: {
+          from: "donations", // The name of your donations collection
+          localField: "_id",
+          foreignField: "caseReportId", // The field in donations that links to the case
+          as: "donationDetails",
+        },
+      },
+
+      // Stage 3: Join with users to get the hospital name
+      {
+        $lookup: {
+          from: "users", // The name of your users collection
+          localField: "HospitalId", // The field in CaseReport
+          foreignField: "_id", // The field in User
+          as: "hospitalInfo",
+        },
+      },
+
+      // Stage 4: Deconstruct the hospitalInfo array
+      { $unwind: { path: "$hospitalInfo", preserveNullAndEmptyArrays: true } },
+
+      // Stage 5: Project the final shape and add calculated fields
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          description: 1,
+          cost: 1,
+          photoUrl: 1,
+          createdAt: 1,
+          hospitalName: "$hospitalInfo.name",
+          raisedAmount: { $sum: "$donationDetails.amount" },
+          donationsCount: { $size: "$donationDetails" },
+          // Calculate status for frontend ('active' or 'completed')
+          status: {
+            $cond: {
+              if: { $gte: [{ $sum: "$donationDetails.amount" }, "$cost"] },
+              then: "completed",
+              else: "active",
+            },
+          },
+        },
+      },
+    ];
+
+    const cases = await CaseReport.aggregate(pipeline)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // Get total count for pagination
+    const totalCasesResult = await CaseReport.aggregate([
+      ...pipeline.slice(0, 1), // Only use the $match stage for counting
+      { $count: "total" },
+    ]);
+    const totalCases = totalCasesResult[0]?.total || 0;
+    const totalPages = Math.ceil(totalCases / limit);
+
+    res.json({
+      success: true,
+      data: {
+        cases,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalCases,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
+      },
+    });
+  } catch (error) {
+    log("ERROR", "Failed to fetch public cases", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error fetching public cases",
+    });
+  }
+});
 
 // -------------------- Get Case Report by ID --------------------
 router.get(

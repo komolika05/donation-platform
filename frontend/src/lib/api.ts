@@ -1,7 +1,9 @@
-import axios from "axios"
-import toast from "react-hot-toast"
+import { PublicCasesResponse } from "@/types";
+import axios from "axios";
+import toast from "react-hot-toast";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 // Create axios instance
 const api = axios.create({
@@ -9,47 +11,66 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-})
+});
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("jkvis_token")
+    const token = localStorage.getItem("jkvis_token");
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return config
+    return config;
   },
   (error) => {
-    return Promise.reject(error)
-  },
-)
+    return Promise.reject(error);
+  }
+);
 
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
-    return response
+    return response;
   },
   (error) => {
-    const message = error.response?.data?.message || "An error occurred"
+    const message = error.response?.data?.message || "An error occurred";
 
     // Don't show toast for certain endpoints
-    const silentEndpoints = ["/auth/me"]
-    const isSilentEndpoint = silentEndpoints.some((endpoint) => error.config?.url?.includes(endpoint))
+    const silentEndpoints = ["/auth/me"];
+    const isSilentEndpoint = silentEndpoints.some((endpoint) =>
+      error.config?.url?.includes(endpoint)
+    );
 
     if (!isSilentEndpoint) {
-      toast.error(message)
+      toast.error(message);
     }
 
     // Redirect to login if unauthorized
     if (error.response?.status === 401) {
-      localStorage.removeItem("jkvis_token")
-      localStorage.removeItem("jkvis_user")
-      window.location.href = "/login"
+      localStorage.removeItem("jkvis_token");
+      localStorage.removeItem("jkvis_user");
+      window.location.href = "/login";
     }
 
-    return Promise.reject(error)
-  },
-)
+    return Promise.reject(error);
+  }
+);
 
-export default api
+export const fetchPublicCases = async (
+  page = 1,
+  limit = 9
+): Promise<PublicCasesResponse> => {
+  try {
+    const response = await api.get(`/reports/public`, {
+      params: { page, limit },
+    });
+    // Ensure you return the nested data object
+    return response.data.data;
+  } catch (error) {
+    console.error("Failed to fetch public cases:", error);
+    // The interceptor will handle the toast
+    throw error;
+  }
+};
+
+export default api;

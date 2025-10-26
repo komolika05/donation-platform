@@ -172,3 +172,25 @@ export interface Pagination {
   hasNextPage: boolean;
   hasPrevPage: boolean;
 }
+
+export interface CaseSummary {
+  _id: string;
+  title: string;
+  description: string;
+  cost: number;
+  raisedAmount: number;
+  donationsCount: number;
+  photoUrl?: string;
+  hospitalName: string;
+  status: "active" | "completed";
+  createdAt: string; // ISO date string
+}
+
+export interface PublicCasesResponse {
+  cases: CaseSummary[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCases: number;
+  };
+}
