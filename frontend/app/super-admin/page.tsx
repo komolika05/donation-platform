@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
@@ -17,60 +17,105 @@ import {
   AlertTriangle,
   Badge,
 } from "lucide-react";
+import { fetchPendingReports, reviewCaseReport } from "@/lib/super-admin-api";
 import { mockSuperAdminData } from "@/lib/api-client";
-import type { Hospital, CaseReport, SuperAdminStats } from "@/types";
+
+import type {
+  Hospital,
+  CaseReport,
+  SuperAdminStats,
+  Pagination,
+} from "@/types";
 import toast from "react-hot-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import Navbar from "@/components/layout/Navbar";
 
+// A simple spinner component
+const Spinner = () => (
+  <div className="flex justify-center items-center p-8">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  </div>
+);
+
 export default function SuperAdminDashboard() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+
+  // State for data
   const [stats, setStats] = useState<SuperAdminStats | null>(null);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [pendingReports, setPendingReports] = useState<CaseReport[]>([]);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
+
+  // Loading states
+  const [isReportsLoading, setIsReportsLoading] = useState(true);
+
+  // Note: Selected Hospital state from your original code
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(
     null
   );
 
+  const loadPendingReports = useCallback(async () => {
+    if (user?.role !== "super-admin") return;
+    setIsReportsLoading(true);
+    try {
+      const data = await fetchPendingReports();
+      setPendingReports(data.reports);
+      setPagination(data.pagination);
+    } catch (error) {
+      // Toast is handled by the API interceptor
+      console.error("Error loading pending reports on component.");
+    } finally {
+      setIsReportsLoading(false);
+    }
+  }, [user]);
+
   useEffect(() => {
-    if (!loading && (!user || user.role !== "super-admin")) {
+    if (!authLoading && (!user || user.role !== "super-admin")) {
+      toast.error("Access denied. You must be a Super Admin.");
       router.push("/");
       return;
     }
 
     if (user?.role === "super-admin") {
-      // Load mock data for now
+      loadPendingReports();
+      // TODO: Fetch stats and hospitals data from your backend as well
       setStats(mockSuperAdminData.superAdminStats);
       setHospitals(mockSuperAdminData.hospitals);
     }
-  }, [user, loading, router]);
+  }, [user, authLoading, router, loadPendingReports]);
 
   const handleApproveCase = async (caseId: string) => {
     try {
-      // In real implementation, call superAdminApi.approveCaseReport(caseId)
+      await reviewCaseReport(caseId, "approve");
+      toast.success("Case approved successfully!");
+      // Remove the report from the local state for instant UI update
       setPendingReports((prev) =>
         prev.filter((report) => report.id !== caseId)
       );
-      toast.success("Case approved successfully!");
     } catch (error) {
-      toast.error("Failed to approve case");
+      // Toast is handled by the API interceptor
     }
   };
 
   const handleRejectCase = async (caseId: string, reason: string) => {
+    if (!reason || reason.trim().length < 10) {
+      toast.error("Rejection reason must be at least 10 characters long.");
+      return;
+    }
     try {
-      // In real implementation, call superAdminApi.rejectCaseReport(caseId, reason)
+      await reviewCaseReport(caseId, "reject", reason);
+      toast.success("Case rejected successfully!");
+      // Remove the report from the local state for instant UI update
       setPendingReports((prev) =>
         prev.filter((report) => report.id !== caseId)
       );
-      toast.success("Case rejected successfully!");
     } catch (error) {
-      toast.error("Failed to reject case");
+      // Toast is handled by the API interceptor
     }
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -193,17 +238,19 @@ export default function SuperAdminDashboard() {
             <TabsTrigger value="overview">Platform Overview</TabsTrigger>
           </TabsList>
 
-          {/* Pending Case Reports */}
+          {/* Pending Case Reports Tab */}
           <TabsContent value="pending-reports" className="space-y-6">
             <Card className="p-6">
               <h2 className="text-xl font-semibold mb-4">
-                Pending Case Reports
+                Pending Case Reports for Review
               </h2>
-              {pendingReports.length === 0 ? (
+              {isReportsLoading ? (
+                <Spinner />
+              ) : pendingReports.length === 0 ? (
                 <div className="text-center py-8">
                   <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
                   <p className="text-gray-600">
-                    No pending case reports to review
+                    No pending case reports to review. Great job!
                   </p>
                 </div>
               ) : (
@@ -211,7 +258,7 @@ export default function SuperAdminDashboard() {
                   {pendingReports.map((report) => (
                     <div
                       key={report.id}
-                      className="border rounded-lg p-4 bg-white"
+                      className="border rounded-lg p-4 bg-white shadow-sm"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -223,45 +270,55 @@ export default function SuperAdminDashboard() {
                               Pending Review
                             </Badge>
                           </div>
-                          <p className="text-gray-600 mb-3">
+                          <p className="text-gray-600 mb-3 text-sm">
                             {report.description}
                           </p>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
-                              <span className="font-medium">Hospital:</span>
+                              <span className="font-medium text-gray-800">
+                                Hospital:
+                              </span>
                               <p className="text-gray-600">
                                 {report.HospitalId}
                               </p>
                             </div>
                             <div>
-                              <span className="font-medium">Cost:</span>
+                              <span className="font-medium text-gray-800">
+                                Cost:
+                              </span>
                               <p className="text-gray-600">
                                 ${report.cost.toLocaleString()}
                               </p>
                             </div>
                             <div>
-                              <span className="font-medium">Submitted:</span>
+                              <span className="font-medium text-gray-800">
+                                Submitted:
+                              </span>
                               <p className="text-gray-600">
-                                {report.createdAt}
+                                {new Date(
+                                  report.createdAt
+                                ).toLocaleDateString()}
                               </p>
                             </div>
                             <div>
-                              <span className="font-medium">Status:</span>
+                              <span className="font-medium text-gray-800">
+                                Fund Type:
+                              </span>
                               <p className="text-gray-600 capitalize">
-                                {report.status}
+                                {report.fundType}
                               </p>
                             </div>
                           </div>
                         </div>
                         {report.photoUrl && (
                           <img
-                            src={report.photoUrl || "/placeholder.svg"}
+                            src={report.photoUrl}
                             alt={report.title}
-                            className="w-20 h-20 object-cover rounded-lg ml-4"
+                            className="w-24 h-24 object-cover rounded-lg ml-4 hidden sm:block"
                           />
                         )}
                       </div>
-                      <div className="flex gap-3 mt-4 pt-4 border-t">
+                      <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t">
                         <Button
                           onClick={() => handleApproveCase(report.id)}
                           className="bg-green-600 hover:bg-green-700"
@@ -273,9 +330,10 @@ export default function SuperAdminDashboard() {
                           variant="outline"
                           onClick={() => {
                             const reason = prompt(
-                              "Please provide a reason for rejection:"
+                              `Please provide a reason for rejecting the case:\n"${report.title}"`
                             );
-                            if (reason) {
+                            if (reason !== null) {
+                              // Check for cancel button
                               handleRejectCase(report.id, reason);
                             }
                           }}
@@ -284,10 +342,10 @@ export default function SuperAdminDashboard() {
                           <XCircle className="h-4 w-4 mr-2" />
                           Reject
                         </Button>
-                        <Button variant="outline">
+                        {/* <Button variant="ghost">
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
                   ))}

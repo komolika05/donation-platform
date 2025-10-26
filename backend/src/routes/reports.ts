@@ -150,13 +150,13 @@ router.get(
   authenticate,
   authorize("super-admin"),
   async (req: AuthRequest, res: Response): Promise<void> => {
+    log("CASE-REPORT", "Fetching pending case reports");
     try {
       const page = parseInt(req.query["page"] as string) || 1;
       const limit = parseInt(req.query["limit"] as string) || 10;
       const skip = (page - 1) * limit;
 
       const pendingReports = await CaseReport.find({ status: "pending" })
-        .populate("uploadedBy", "name email")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
@@ -198,6 +198,11 @@ router.put(
       const { id } = req.params;
       const { action, reviewNotes } = req.body;
 
+      log("CASE-REPORT", `Reviewing case report ${id}`, {
+        action,
+        reviewNotes,
+      });
+
       if (!["approve", "reject"].includes(action)) {
         res.status(400).json({
           success: false,
@@ -206,10 +211,8 @@ router.put(
         return;
       }
 
-      const caseReport = await CaseReport.findById(id).populate(
-        "uploadedBy",
-        "name email"
-      );
+      const caseReport = await CaseReport.findById(id);
+
       if (!caseReport) {
         res
           .status(404)

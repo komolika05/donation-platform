@@ -164,3 +164,11 @@ export interface SuperAdminStats {
   recentCaseReports: CaseReport[];
   recentHospitals: Hospital[];
 }
+
+export interface Pagination {
+  currentPage: number;
+  totalPages: number;
+  totalReports: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
