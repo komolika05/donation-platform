@@ -7,7 +7,7 @@ import { body, validationResult } from "express-validator";
 import streamifier from "streamifier";
 import { v2 as cloudinary } from "cloudinary";
 import log from "../utils/logger";
-import mongoose from "mongoose";
+import mongoose, { Mongoose } from "mongoose";
 
 const router = express.Router();
 
@@ -401,6 +401,94 @@ router.get("/public", async (req, res: Response): Promise<void> => {
     });
   }
 });
+
+router.get(
+  "/hospitalCases",
+  authenticate, // Add authentication middleware
+  authorize("hospital-admin"), // Ensure only hospital admins can access
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    log("CASE-REPORT", "Fetching active hospital cases for admin");
+    try {
+      const hospitalId = req.user!._id as string; // Get the logged-in admin's ID
+      log("DEBUG", "Hospital ID", hospitalId);
+      const page = parseInt(req.query["page"] as string) || 1;
+      const limit = parseInt(req.query["limit"] as string) || 9;
+      const skip = (page - 1) * limit;
+
+      const pipeline: mongoose.PipelineStage[] = [
+        // Stage 1: Match cases for the specific hospital ID
+        {
+          $match: {
+            HospitalId: hospitalId.toString(),
+          },
+        },
+        // Stage 2: Join with donations
+        {
+          $lookup: {
+            from: "donations",
+            localField: "_id",
+            foreignField: "caseReportId",
+            as: "donationDetails",
+          },
+        },
+        // Stage 3: Project the final shape and add calculated fields
+        {
+          $project: {
+            _id: 1,
+            title: 1,
+            description: 1,
+            cost: 1,
+            photoUrl: 1,
+            createdAt: 1,
+            // You don't need hospitalName here as it's their own dashboard
+            raisedAmount: { $sum: "$donationDetails.amount" },
+            donationsCount: { $size: "$donationDetails" },
+            status: {
+              $cond: {
+                if: { $gte: [{ $sum: "$donationDetails.amount" }, "$cost"] },
+                then: "completed",
+                else: "active",
+              },
+            },
+          },
+        },
+      ];
+
+      const cases = await CaseReport.aggregate(pipeline)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+      // Get total count for pagination
+      const totalCasesResult = await CaseReport.aggregate([
+        { $match: { HospitalId: hospitalId } },
+        { $count: "total" },
+      ]);
+      const totalCases = totalCasesResult[0]?.total || 0;
+      const totalPages = Math.ceil(totalCases / limit);
+
+      res.json({
+        success: true,
+        data: {
+          cases,
+          pagination: {
+            currentPage: page,
+            totalPages,
+            totalCases,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
+          },
+        },
+      });
+    } catch (error) {
+      log("ERROR", "Failed to fetch hospital cases", error);
+      res.status(500).json({
+        success: false,
+        message: "Server error fetching hospital cases",
+      });
+    }
+  }
+);
 
 // -------------------- Get Case Report by ID --------------------
 router.get(

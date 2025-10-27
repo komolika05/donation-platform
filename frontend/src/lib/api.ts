@@ -78,6 +78,23 @@ export const fetchPublicCases = async (
   }
 };
 
+export const fetchHospitalCases = async (
+  page = 1,
+  limit = 9
+): Promise<PublicCasesResponse> => {
+  try {
+    const response = await api.get(`/reports/hospitalCases`, {
+      params: { page, limit },
+    });
+    // Ensure you return the nested data object
+    return response.data.data;
+  } catch (error) {
+    console.error("Failed to fetch public cases:", error);
+    // The interceptor will handle the toast
+    throw error;
+  }
+};
+
 export const recordDonation = async (donationData: DonationPayload) => {
   try {
     const response = await api.post("/donations/record", donationData);

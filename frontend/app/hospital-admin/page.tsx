@@ -7,8 +7,10 @@ import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { formatCurrency, formatDate, calculateProgress } from "@/lib/utils";
+// Import the API function
+import { fetchHospitalCases } from "@/lib/api";
 import { mockData } from "@/lib/api-client";
-import type { Donation, Case, DashboardStats } from "@/types";
+import type { Donation, CaseSummary, DashboardStats } from "@/types";
 import {
   Users,
   DollarSign,
@@ -23,7 +25,7 @@ export default function HospitalAdminDashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [donations, setDonations] = useState<Donation[]>([]);
-  const [cases, setCases] = useState<Case[]>([]);
+  const [cases, setCases] = useState<CaseSummary[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
@@ -37,52 +39,39 @@ export default function HospitalAdminDashboard() {
     }
 
     if (user && user.role === "hospital-admin") {
-      // Load admin data - using mock data for now
-      const allDonations = [
-        ...mockData.donations,
-        {
-          _id: "3",
-          donorId: "user2",
-          donorName: "Jane Smith",
-          donorEmail: "jane@example.com",
-          amount: 1000,
-          currency: "USD",
-          type: "sponsorship" as const,
-          caseId: "case2",
-          caseName: "Cancer Treatment for Michael",
-          transactionId: "TXN-123458",
-          paymentMethod: "stripe",
-          status: "completed" as const,
-          receiptUrl: "/receipts/receipt-3.pdf",
-          createdAt: new Date("2024-01-12"),
-          updatedAt: new Date("2024-01-12"),
-        },
-        {
-          _id: "4",
-          donorId: "user3",
-          donorName: "Bob Johnson",
-          donorEmail: "bob@example.com",
-          amount: 300,
-          currency: "USD",
-          type: "general" as const,
-          transactionId: "TXN-123459",
-          paymentMethod: "paypal",
-          status: "completed" as const,
-          receiptUrl: "/receipts/receipt-4.pdf",
-          createdAt: new Date("2024-01-08"),
-          updatedAt: new Date("2024-01-08"),
-        },
-      ];
+      // Create an async function to load all dashboard data
+      const loadDashboardData = async () => {
+        try {
+          setIsLoading(true);
 
-      setDonations(allDonations);
-      setCases(mockData.cases);
-      setStats({
-        ...mockData.adminStats,
-        recentDonations: allDonations.slice(0, 5),
-      });
-      setIsLoading(false);
+          // Fetch cases from the API
+          const casesResponse = await fetchHospitalCases();
+          console.log("Fetched cases:", casesResponse);
+          setCases(casesResponse.cases);
+
+          // --- NOTE: Donations and Stats are still using mock data as requested ---
+          // You would replace these with their respective API calls in the future
+          const allDonations = [...mockData.donations]; // Example mock data
+          setDonations(allDonations);
+          setStats({
+            ...mockData.adminStats,
+            recentDonations: allDonations.slice(0, 5),
+          });
+          // --- End of mock data section ---
+        } catch (error) {
+          console.error("Failed to load dashboard data:", error);
+          // Error toasts are handled by the api.ts interceptor
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      loadDashboardData();
     }
   }, [user, loading, router]);
+
+  // ... (The rest of your component code remains exactly the same)
+  // No changes are needed in the loading spinner, handlers, or render functions.
 
   if (loading || isLoading) {
     return (
@@ -203,7 +192,7 @@ export default function HospitalAdminDashboard() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-gray-900">
-                      {donation.caseName || "General Fund"}
+                      {donation.caseReport?.title || "General Fund"}
                     </p>
                     <span
                       className={`px-2 py-1 text-xs rounded-full ${
@@ -330,7 +319,7 @@ export default function HospitalAdminDashboard() {
                     {donation.type}
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-600">
-                    {donation.caseName || "General Fund"}
+                    {donation.caseReport?.title || "General Fund"}
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-600">
                     {formatDate(donation.createdAt)}
