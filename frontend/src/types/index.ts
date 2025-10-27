@@ -19,7 +19,7 @@ export interface Donation {
   currency: string;
   type: "general" | "sponsorship" | "20kids20";
   caseId?: string;
-  caseName?: string;
+  caseReport?: CaseReport;
   transactionId: string;
   paymentMethod: string;
   status: "pending" | "completed" | "failed";
@@ -193,4 +193,17 @@ export interface PublicCasesResponse {
     totalPages: number;
     totalCases: number;
   };
+}
+
+export interface DonationPayload {
+  amount: number;
+  currency: string;
+  type: string;
+  paymentMethod: "stripe" | "paypal";
+  caseReportId?: string;
+}
+
+export interface MyDonationsResponse {
+  donations: Donation[];
+  pagination: Pagination;
 }

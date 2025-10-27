@@ -4,7 +4,7 @@ import type { IDonation } from "../types";
 const DonationSchema: Schema = new Schema(
   {
     donor: {
-      type: Schema.Types.ObjectId,
+      type: String,
       ref: "User",
       required: [true, "Donor is required"],
     },
@@ -31,7 +31,7 @@ const DonationSchema: Schema = new Schema(
       required: [true, "Donation type is required"],
     },
     caseReport: {
-      type: Schema.Types.ObjectId,
+      type: String,
       ref: "CaseReport",
       required: function (this: IDonation) {
         return this.type === "sponsorship" || this.type === "20kids20";

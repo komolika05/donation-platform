@@ -34,6 +34,95 @@ const validateDonation = [
     .withMessage("Payment method must be stripe or paypal"),
 ];
 
+// -------------------- Record a Dummy/Direct Donation --------------------
+router.post(
+  "/record",
+  authenticate,
+  validateDonation, // We can reuse the same validation
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({
+          success: false,
+          message: "Validation failed",
+          errors: errors.array(),
+        });
+        return;
+      }
+
+      const { amount, currency, type, caseReportId, paymentMethod } = req.body;
+      const userId = req.user!._id;
+
+      log("INFO", "Recording a new donation", {
+        userId,
+        amount,
+        type,
+        caseReportId,
+      });
+
+      // Generate a dummy transaction ID, similar to the frontend
+      const transactionId = `TXN-DUMMY-${Date.now()}-${Math.random()
+        .toString(36)
+        .substr(2, 9)
+        .toUpperCase()}`;
+
+      // Create the donation record
+      const newDonation = new Donation({
+        donor: userId,
+        amount,
+        currency,
+        type,
+        caseReport: caseReportId || undefined,
+        paymentMethod,
+        transactionId,
+        status: "completed", // Since it's a direct record
+      });
+
+      await newDonation.save();
+
+      // If it's a sponsorship donation, update the case report
+      if (caseReportId) {
+        const caseUpdate = await CaseReport.findByIdAndUpdate(
+          caseReportId,
+          {
+            // Use $inc to atomically update the numbers
+            $inc: { raisedAmount: amount, donationsCount: 1 },
+          },
+          { new: true } // Return the updated document
+        );
+
+        if (!caseUpdate) {
+          log(
+            "WARN",
+            "CaseReport not found for update during donation record",
+            { caseReportId }
+          );
+        }
+      }
+
+      log("INFO", "Donation recorded successfully", {
+        donationId: newDonation._id,
+        userId,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: "Donation recorded successfully",
+        data: {
+          donation: newDonation,
+        },
+      });
+    } catch (error) {
+      log("ERROR", "Error recording donation:", error);
+      res.status(500).json({
+        success: false,
+        message: "Server error while recording donation",
+      });
+    }
+  }
+);
+
 // -------------------- Stripe Payment Intent --------------------
 router.post(
   "/create-payment-intent",
@@ -362,6 +451,54 @@ router.post(
       res.status(500).json({
         success: false,
         message: "Server error confirming PayPal payment",
+      });
+    }
+  }
+);
+
+router.get(
+  "/dashboard-summary",
+  authenticate,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const userId = req.user!._id;
+      log("INFO", "Fetching dashboard summary for user", { userId });
+
+      // Use Promise.all to run aggregation queries concurrently for efficiency
+      const [stats, totalCasesResult] = await Promise.all([
+        // Query 1: Calculate total amount and count of donations
+        Donation.aggregate([
+          { $match: { donor: userId, status: "completed" } },
+          {
+            $group: {
+              _id: null,
+              totalAmount: { $sum: "$amount" },
+              totalDonations: { $sum: 1 },
+            },
+          },
+        ]),
+        // Query 2: Count distinct cases the user has donated to
+        Donation.distinct("caseReport", {
+          donor: userId,
+          caseReport: { $ne: null }, // Ensure caseReport exists
+        }),
+      ]);
+
+      const summary = {
+        totalAmount: stats[0]?.totalAmount || 0,
+        totalDonations: stats[0]?.totalDonations || 0,
+        totalCases: totalCasesResult.length,
+      };
+
+      res.json({
+        success: true,
+        data: summary,
+      });
+    } catch (error) {
+      log("ERROR", "Error fetching dashboard summary:", error);
+      res.status(500).json({
+        success: false,
+        message: "Server error fetching dashboard summary",
       });
     }
   }

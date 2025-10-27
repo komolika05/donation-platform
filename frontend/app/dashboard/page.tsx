@@ -7,7 +7,8 @@ import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { formatCurrency, formatDate, getInitials } from "@/lib/utils";
-import { mockData } from "@/lib/api-client";
+// 👇 Import the new API functions
+import { fetchDashboardStats, fetchMyDonations } from "@/lib/api";
 import type { Donation, DashboardStats } from "@/types";
 import Link from "next/link";
 import {
@@ -33,14 +34,27 @@ export default function DonorDashboard() {
       return;
     }
 
+    const loadDashboardData = async () => {
+      try {
+        setIsLoading(true);
+        // Fetch stats and donations concurrently
+        const [statsResponse, donationsResponse] = await Promise.all([
+          fetchDashboardStats(),
+          fetchMyDonations(1, 100), // Fetching all donations for now
+        ]);
+
+        setStats(statsResponse.data);
+        setDonations(donationsResponse.data.donations);
+      } catch (error) {
+        console.error("Failed to load dashboard data", error);
+        // Error toast is handled by the API interceptor
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     if (user && user.role === "donor") {
-      // Load donor data - using mock data for now
-      setDonations(mockData.donations);
-      setStats({
-        ...mockData.donorStats,
-        recentDonations: mockData.donations.slice(0, 3),
-      });
-      setIsLoading(false);
+      loadDashboardData();
     }
   }, [user, loading, router]);
 
@@ -68,7 +82,7 @@ Transaction ID: ${donation.transactionId}
 Date: ${formatDate(donation.createdAt)}
 Amount: ${formatCurrency(donation.amount, donation.currency)}
 Donation Type: ${donation.type}
-${donation.caseName ? `Case: ${donation.caseName}` : ""}
+${donation.caseReport?.title ? `Case: ${donation.caseReport.title}` : ""}
 
 Thank you for your generous donation!
 This receipt serves as proof of your charitable contribution.
@@ -193,7 +207,8 @@ For questions, contact us at support@jkvis.org
                             {formatCurrency(donation.amount, donation.currency)}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {donation.caseName || `${donation.type} donation`}
+                            {donation.caseReport?.title ||
+                              `${donation.type} donation`}{" "}
                           </p>
                           <p className="text-xs text-gray-400">
                             {formatDate(donation.createdAt)}
@@ -360,7 +375,7 @@ For questions, contact us at support@jkvis.org
                           {donation.type}
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-600">
-                          {donation.caseName || "General Fund"}
+                          {donation.caseReport?.title || "General Fund"}
                         </td>
                         <td className="py-3 px-4">
                           <span

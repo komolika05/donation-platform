@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -22,10 +22,10 @@ import {
 } from "@/components/ui/Card";
 import { formatCurrency, calculateProgress } from "@/lib/utils";
 import toast from "react-hot-toast";
-import type { Case } from "@/types";
+import type { Case, CaseSummary } from "@/types";
 import Input from "../ui/Input";
 import { useRouter } from "next/navigation";
-import { mockData } from "@/lib/api-client";
+import { fetchPublicCases, recordDonation } from "@/lib/api";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
@@ -243,8 +243,8 @@ const DonationFormContent = () => {
   const stripe = useStripe();
   const elements = useElements();
   const [isLoading, setIsLoading] = useState(false);
-  const [availableCases, setAvailableCases] = useState<Case[]>([]);
-  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  const [availableCases, setAvailableCases] = useState<CaseSummary[]>([]);
+  const [selectedCase, setSelectedCase] = useState<CaseSummary | null>(null);
   const [donationSuccess, setDonationSuccess] =
     useState<DonationSuccess | null>(null);
   const router = useRouter();
@@ -275,12 +275,25 @@ const DonationFormContent = () => {
       router.push("/login");
       return;
     }
-
-    const activeCases = mockData.cases.filter(
-      (c: any) => c.status === "active"
-    );
-    setAvailableCases(activeCases);
   }, [user, router]);
+
+  // Fetch cases from the backend
+  const loadCases = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetchPublicCases();
+      setAvailableCases(response.cases);
+    } catch (error) {
+      console.error("Failed to load cases from API");
+      // Error toast is handled by the API interceptor
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCases();
+  }, [loadCases]);
 
   if (!user) return null;
 
@@ -290,7 +303,8 @@ const DonationFormContent = () => {
       return;
     }
 
-    if (!stripe || !elements) {
+    // This check is now less critical for the dummy flow but good to keep
+    if (data.paymentMethod === "stripe" && (!stripe || !elements)) {
       toast.error("Payment system not ready");
       return;
     }
@@ -298,20 +312,26 @@ const DonationFormContent = () => {
     try {
       setIsLoading(true);
 
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate processing time
-
-      // Create dummy success data
-      const successData: DonationSuccess = {
-        transactionId: `TXN-${Date.now()}-${Math.random()
-          .toString(36)
-          .substr(2, 9)
-          .toUpperCase()}`,
+      // ✅ CALL THE NEW API ENDPOINT
+      const response = await recordDonation({
         amount: data.amount,
         currency: data.currency,
-        donationType: data.type,
-        caseName: selectedCase?.title,
-        receiptUrl: `/receipts/dummy-receipt-${Date.now()}.pdf`,
-        date: new Date().toLocaleDateString("en-US", {
+        type: data.type,
+        caseReportId: data.caseReportId,
+        paymentMethod: data.paymentMethod,
+      });
+
+      const recordedDonation = response.data.donation;
+
+      // ✅ CREATE THE SUCCESS SCREEN DATA FROM THE API RESPONSE
+      const successData: DonationSuccess = {
+        transactionId: recordedDonation.transactionId,
+        amount: recordedDonation.amount,
+        currency: recordedDonation.currency,
+        donationType: recordedDonation.type,
+        caseName: selectedCase?.title, // Get case name from component state
+        receiptUrl: `/receipts/dummy-receipt-${recordedDonation.transactionId}.pdf`, // Can be generated later
+        date: new Date(recordedDonation.date).toLocaleDateString("en-US", {
           year: "numeric",
           month: "long",
           day: "numeric",
@@ -324,7 +344,6 @@ const DonationFormContent = () => {
       toast.success("Donation completed successfully!");
     } catch (error: any) {
       console.error("Donation error:", error);
-      toast.error(error.message || "Donation failed");
     } finally {
       setIsLoading(false);
     }

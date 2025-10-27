@@ -1,4 +1,9 @@
-import { PublicCasesResponse } from "@/types";
+import {
+  DashboardStats,
+  DonationPayload,
+  MyDonationsResponse,
+  PublicCasesResponse,
+} from "@/types";
 import axios from "axios";
 import toast from "react-hot-toast";
 
@@ -69,6 +74,46 @@ export const fetchPublicCases = async (
   } catch (error) {
     console.error("Failed to fetch public cases:", error);
     // The interceptor will handle the toast
+    throw error;
+  }
+};
+
+export const recordDonation = async (donationData: DonationPayload) => {
+  try {
+    const response = await api.post("/donations/record", donationData);
+    return response.data; // This will be { success: true, data: { donation: ... } }
+  } catch (error) {
+    console.error("Failed to record donation:", error);
+    // The interceptor will handle the toast
+    throw error;
+  }
+};
+
+// Function to get the summary stats
+export const fetchDashboardStats = async (): Promise<{
+  data: DashboardStats;
+}> => {
+  try {
+    const response = await api.get("/donations/dashboard-summary");
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch dashboard stats:", error);
+    throw error;
+  }
+};
+
+// Function to get the list of user's donations
+export const fetchMyDonations = async (
+  page = 1,
+  limit = 10
+): Promise<{ data: MyDonationsResponse }> => {
+  try {
+    const response = await api.get("/donations/my-donations", {
+      params: { page, limit },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch user donations:", error);
     throw error;
   }
 };
