@@ -1,6 +1,7 @@
 import express, { Response } from "express";
 import fs from "fs";
 import CaseReport from "../models/CaseReport";
+import ApprovedCaseReport from "../models/ApprovedCaseReports";
 import { authenticate, authorize, type AuthRequest } from "../middleware/auth";
 import { uploadSingle, handleUploadError } from "../middleware/upload";
 import { body, validationResult } from "express-validator";
@@ -194,52 +195,73 @@ router.put(
   "/review/:id",
   authenticate,
   authorize("super-admin"),
-  async (req: AuthRequest, res: Response): Promise<void> => {
+  async (req: AuthRequest, res: Response): Promise<any> => {
     try {
       const { id } = req.params;
       const { action, reviewNotes } = req.body;
 
-      log("CASE-REPORT", `Reviewing case report ${id}`, {
-        action,
-        reviewNotes,
-      });
-
       if (!["approve", "reject"].includes(action)) {
-        res.status(400).json({
+        return res.status(400).json({
           success: false,
           message: "Action must be either 'approve' or 'reject'",
         });
-        return;
       }
 
-      const caseReport = await CaseReport.findById(id);
+      // 1. Find the report in the "deposit-tanks" collection
+      const depositReport = await CaseReport.findById(id);
 
-      if (!caseReport) {
-        res
-          .status(404)
-          .json({ success: false, message: "Case report not found" });
-        return;
-      }
-
-      if (caseReport.status !== "pending") {
-        res.status(400).json({
+      if (!depositReport) {
+        return res.status(404).json({
           success: false,
-          message: "Case report has already been reviewed",
+          message: "Case report for review not found",
         });
-        return;
       }
 
-      caseReport.status = action === "approve" ? "approved" : "rejected";
-      if (reviewNotes) caseReport.set("reviewNotes", reviewNotes);
+      if (depositReport.status !== "pending") {
+        return res.status(400).json({
+          success: false,
+          message: "This case report has already been reviewed",
+        });
+      }
 
-      await caseReport.save();
+      // --- LOGIC FOR APPROVAL ---
+      if (action === "approve") {
+        // 2. Create a new ApprovedCaseReport using the data from the deposit report
+        const newCaseReport = new ApprovedCaseReport({
+          ...depositReport.toObject(), // Copies all fields
+          _id: undefined, // Let MongoDB generate a new ID
+          status: "approved", // Set default status
+          raisedAmount: 0, // Initialize raised amount
+          reviewNotes: reviewNotes, // You can add review notes if needed
+        });
 
-      res.json({
-        success: true,
-        message: `Case report ${action}d successfully`,
-        data: { caseReport },
-      });
+        await newCaseReport.save();
+
+        // 3. IMPORTANT: Delete the original document from the "deposit-tanks" collection
+        await depositReport.deleteOne();
+
+        return res.json({
+          success: true,
+          message: "Case report approved and moved successfully",
+          data: { caseReport: newCaseReport },
+        });
+      }
+
+      // --- LOGIC FOR REJECTION ---
+      if (action === "reject") {
+        depositReport.status = "rejected";
+        if (reviewNotes) depositReport.set("reviewNotes", reviewNotes); // Add notes to the rejected report
+
+        await depositReport.save();
+
+        return res.json({
+          success: true,
+          message: "Case report rejected successfully",
+          data: { caseReport: depositReport },
+        });
+      }
     } catch (error) {
+      console.error("Error reviewing case report:", error);
       res.status(500).json({
         success: false,
         message: "Server error reviewing case report",
